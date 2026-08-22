@@ -118,6 +118,11 @@ pytest -q
 ```bash
 # Phase 4 -- exploratory + signal analysis (figures + web_data JSON)
 python -m src.signal_analysis
+```
+
+```bash
+# Phase 5 -- weather-blind features + Model A/B (metrics + predictions to outputs/)
+python -m src.modelling
 
 # List available NESO year resources without downloading:
 python -m src.ingest_neso --list

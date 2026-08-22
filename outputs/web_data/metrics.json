@@ -1,0 +1,75 @@
+{
+  "test_start_year": 2023,
+  "train_days": 2915,
+  "test_days": 1096,
+  "metrics": {
+    "climatology": {
+      "mae": 2.143108503040373,
+      "rmse": 2.739362795312506,
+      "r2": 0.7227756263200151,
+      "n": 1096
+    },
+    "linear_A": {
+      "mae": 2.7403270463330944,
+      "rmse": 3.368333908819637,
+      "r2": 0.5808566506903077,
+      "n": 1096
+    },
+    "linear_B": {
+      "mae": 1.832545128629818,
+      "rmse": 2.414403098242071,
+      "r2": 0.7846465348138218,
+      "n": 1096
+    },
+    "rf_A": {
+      "mae": 2.726714293617285,
+      "rmse": 3.401704705072613,
+      "r2": 0.5725104270057975,
+      "n": 1096
+    },
+    "rf_B": {
+      "mae": 1.7650381451637394,
+      "rmse": 2.1941667991006466,
+      "r2": 0.8221427457861408,
+      "n": 1096
+    }
+  },
+  "features_A": [
+    "nd_mean",
+    "nd_max",
+    "nd_min",
+    "nd_std",
+    "nd_range",
+    "tsd_mean",
+    "evening_peak_mw",
+    "overnight_min_mw",
+    "morning_ramp_max_mw",
+    "nd_mean_lag1",
+    "nd_mean_lag7",
+    "nd_mean_roll7",
+    "nd_range_roll7"
+  ],
+  "features_B": [
+    "nd_mean",
+    "nd_max",
+    "nd_min",
+    "nd_std",
+    "nd_range",
+    "tsd_mean",
+    "evening_peak_mw",
+    "overnight_min_mw",
+    "morning_ramp_max_mw",
+    "nd_mean_lag1",
+    "nd_mean_lag7",
+    "nd_mean_roll7",
+    "nd_range_roll7",
+    "month_sin",
+    "month_cos",
+    "doy_sin",
+    "doy_cos",
+    "dow",
+    "is_weekend",
+    "is_holiday",
+    "daylight_hours"
+  ]
+}

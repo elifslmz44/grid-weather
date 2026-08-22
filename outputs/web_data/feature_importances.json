@@ -1,0 +1,142 @@
+{
+  "rf_A": [
+    {
+      "feature": "nd_mean_roll7",
+      "importance": 0.508
+    },
+    {
+      "feature": "overnight_min_mw",
+      "importance": 0.2012
+    },
+    {
+      "feature": "nd_range_roll7",
+      "importance": 0.0848
+    },
+    {
+      "feature": "nd_min",
+      "importance": 0.0474
+    },
+    {
+      "feature": "morning_ramp_max_mw",
+      "importance": 0.042
+    },
+    {
+      "feature": "nd_mean_lag7",
+      "importance": 0.0199
+    },
+    {
+      "feature": "tsd_mean",
+      "importance": 0.0179
+    },
+    {
+      "feature": "nd_mean_lag1",
+      "importance": 0.0174
+    },
+    {
+      "feature": "evening_peak_mw",
+      "importance": 0.0159
+    },
+    {
+      "feature": "nd_max",
+      "importance": 0.0135
+    },
+    {
+      "feature": "nd_mean",
+      "importance": 0.0115
+    },
+    {
+      "feature": "nd_std",
+      "importance": 0.011
+    },
+    {
+      "feature": "nd_range",
+      "importance": 0.0095
+    }
+  ],
+  "rf_B": [
+    {
+      "feature": "nd_mean_roll7",
+      "importance": 0.4665
+    },
+    {
+      "feature": "overnight_min_mw",
+      "importance": 0.1433
+    },
+    {
+      "feature": "doy_cos",
+      "importance": 0.1026
+    },
+    {
+      "feature": "doy_sin",
+      "importance": 0.0819
+    },
+    {
+      "feature": "nd_min",
+      "importance": 0.0401
+    },
+    {
+      "feature": "month_sin",
+      "importance": 0.0283
+    },
+    {
+      "feature": "nd_range_roll7",
+      "importance": 0.0272
+    },
+    {
+      "feature": "daylight_hours",
+      "importance": 0.0258
+    },
+    {
+      "feature": "morning_ramp_max_mw",
+      "importance": 0.0162
+    },
+    {
+      "feature": "nd_mean_lag7",
+      "importance": 0.0155
+    },
+    {
+      "feature": "nd_mean_lag1",
+      "importance": 0.0103
+    },
+    {
+      "feature": "nd_max",
+      "importance": 0.0075
+    },
+    {
+      "feature": "tsd_mean",
+      "importance": 0.0075
+    },
+    {
+      "feature": "evening_peak_mw",
+      "importance": 0.0065
+    },
+    {
+      "feature": "nd_std",
+      "importance": 0.0061
+    },
+    {
+      "feature": "nd_mean",
+      "importance": 0.0055
+    },
+    {
+      "feature": "nd_range",
+      "importance": 0.0055
+    },
+    {
+      "feature": "dow",
+      "importance": 0.0027
+    },
+    {
+      "feature": "month_cos",
+      "importance": 0.0007
+    },
+    {
+      "feature": "is_holiday",
+      "importance": 0.0002
+    },
+    {
+      "feature": "is_weekend",
+      "importance": 0.0002
+    }
+  ]
+}

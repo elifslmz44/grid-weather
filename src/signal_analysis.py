@@ -300,11 +300,15 @@ def fourier_spectrum(demand: pd.DataFrame) -> dict:
                 return name
         return f"{ph:,.1f} h"
 
-    top = [{"period_hours": round(float(periods_h[i]), 2),
-            "period_label": label(periods_h[i]),
-            "relative_power": round(float(power[i] / power.max()), 4)}
-           for i in peak_idx]
-    top = sorted(top, key=lambda r: r["relative_power"], reverse=True)[:8]
+    raw_peaks = [{"period_hours": round(float(periods_h[i]), 2),
+                  "period_label": label(periods_h[i]),
+                  "relative_power": round(float(power[i] / power.max()), 4)}
+                 for i in peak_idx]
+    # dedupe by label, keeping the strongest instance of each named period
+    best = {}
+    for pk in sorted(raw_peaks, key=lambda r: r["relative_power"], reverse=True):
+        best.setdefault(pk["period_label"], pk)
+    top = sorted(best.values(), key=lambda r: r["relative_power"], reverse=True)[:8]
 
     # figure: power vs period (log-x), annotate expected lines
     fig, ax = plt.subplots(figsize=(10, 4.8))
