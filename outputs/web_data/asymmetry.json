@@ -1,0 +1,8 @@
+{
+  "median_temp_c": 11.12,
+  "model_mae_cold_half": 1.707,
+  "model_mae_warm_half": 1.823,
+  "demand_temp_corr_cold_half": -0.683,
+  "demand_temp_corr_warm_half": -0.292,
+  "interpretation": "stronger demand-temperature coupling in the cold half"
+}

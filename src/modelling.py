@@ -22,8 +22,15 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import warnings
 
 import numpy as np
+
+# Apple's Accelerate BLAS (default on macOS system Python) emits spurious floating-point flags
+# during matrix multiply -- "divide by zero / overflow / invalid encountered in matmul" -- even
+# when the result is exact. They are harmless here (verified: linear metrics are stable and match
+# the tree models), so we silence just these specific messages to keep the console readable.
+warnings.filterwarnings("ignore", message=".*encountered in matmul.*", category=RuntimeWarning)
 import pandas as pd
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
@@ -73,8 +80,12 @@ def climatology_baseline(train, test, target):
 
 
 def _fit_predict(model, train, test, feats, target):
-    model.fit(train[feats], train[target])
-    return model.predict(test[feats]), model
+    # np.errstate scopes the same spurious BLAS FP flags at the source, belt-and-suspenders
+    # with the module-level warnings filter above.
+    with np.errstate(divide="ignore", over="ignore", invalid="ignore"):
+        model.fit(train[feats], train[target])
+        preds = model.predict(test[feats])
+    return preds, model
 
 
 def _get_importances(fitted, feats):

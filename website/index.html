@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can Britain's Electricity Grid Reveal the Weather?</title>
+<meta name="description" content="An experiment in extracting environmental signals from electricity demand — without showing the model the temperature.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">A data investigation · NESO demand + ERA5 weather</p>
+    <h1>Can Britain's electricity grid<br>reveal the weather?</h1>
+    <p class="lede">An experiment in extracting environmental signals from electricity demand —
+      without ever showing the model the temperature.</p>
+    <div class="pulse"><svg id="hero-pulse" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    <p class="hero-note">The country's electricity demand rises and falls in a daily pulse. Hidden
+      inside that rhythm is the weather. This is an attempt to read it back out.</p>
+  </div>
+  <div class="scroll-cue" aria-hidden="true">↓</div>
+</header>
+
+<main>
+
+<section class="section" id="s1">
+  <div class="wrap">
+    <p class="sec-num">01</p>
+    <h2>Britain has an electrical heartbeat</h2>
+    <p class="body">Every day the grid traces nearly the same shape: a deep overnight trough, a
+      steep morning ramp as the country wakes, and an evening peak when people come home. Winter
+      lifts the whole curve; summer flattens it. None of this mentions temperature yet — it is pure
+      behaviour and physics, the raw material the experiment will work from.</p>
+  </div>
+  <figure class="chart-wide"><div id="chart-hod" class="plot"></div>
+    <figcaption>Average National Demand by time of day, all year and by season.</figcaption></figure>
+  <div class="wrap">
+    <p class="body">The working week leaves its own mark. Weekday mornings start hard; weekends
+      sleep in. That gap has nothing to do with the weather — and separating this behavioural
+      rhythm from the genuine weather signal is the core challenge of everything that follows.</p>
+  </div>
+  <figure class="chart-wide"><div id="chart-ww" class="plot"></div>
+    <figcaption>Weekday vs weekend demand across the day.</figcaption></figure>
+</section>
+
+<section class="section" id="s2">
+  <div class="wrap">
+    <p class="sec-num">02</p>
+    <h2>There are hidden frequencies</h2>
+    <p class="body">Treat a decade of half-hourly demand as one long waveform and take its Fourier
+      transform, and the rhythms resolve into sharp spikes. Each spike is a cycle the country
+      repeats: a dominant <span class="k-demand">24-hour</span> beat, a <span class="k-demand">weekly</span>
+      cycle from the working week, and — the one that matters here — a large
+      <span class="k-temp">annual</span> swing. That yearly component is, in large part, the
+      heating season written directly into the grid.</p>
+  </div>
+  <figure class="chart-wide"><div id="chart-fft" class="plot"></div>
+    <figcaption>Power spectrum of demand (log period axis). Peaks mark the cycles the grid repeats.</figcaption></figure>
+</section>
+
+<section class="section band" id="s3">
+  <div class="wrap">
+    <p class="sec-num">03</p>
+    <h2>Hide the thermometer</h2>
+    <p class="body">Here is the rule that makes this an experiment rather than a correlation plot:
+      the model never sees the temperature. It is trained to infer daily temperature from
+      electricity behaviour and the calendar alone. Even solar and wind generation are withheld —
+      they are effectively sunshine and wind measurements, and letting them in would be cheating.</p>
+    <div class="two-col">
+      <div class="feat-card"><h3>Model A · electricity only</h3>
+        <p class="muted">Demand level, range, overnight minimum, evening peak, and their recent
+          history. No calendar at all.</p>
+        <ul id="feats-a" class="feat-list"></ul></div>
+      <div class="feat-card"><h3>Model B · + calendar</h3>
+        <p class="muted">Everything in A, plus month, day-of-year, weekday, holidays and daylight
+          hours — astronomy, not measured weather.</p>
+        <ul id="feats-b" class="feat-list"></ul></div>
+    </div>
+    <p class="body">Comparing them answers a sharp question: <em>how much weather signal lives in
+      electricity behaviour itself, versus simply knowing what time of year it is?</em></p>
+  </div>
+</section>
+
+<section class="section" id="s4">
+  <div class="wrap">
+    <p class="sec-num">04</p>
+    <h2>Can the grid predict temperature?</h2>
+    <p class="body">Tested on years the model never trained on, here is how close the grid's guess
+      comes to the real thermometer.</p>
+    <div class="stat-row" id="stat-row"></div>
+    <p class="body" id="s4-verdict"></p>
+  </div>
+  <figure class="chart-wide"><div id="chart-ts" class="plot"></div>
+    <figcaption>Observed vs grid-inferred daily temperature, holdout years. Drag to zoom.</figcaption></figure>
+  <div class="two-col-charts">
+    <figure><div id="chart-scatter" class="plot"></div>
+      <figcaption>Predicted vs actual.</figcaption></figure>
+    <figure><div id="chart-compare" class="plot"></div>
+      <figcaption>Mean error by model — lower is better.</figcaption></figure>
+  </div>
+</section>
+
+<section class="section band" id="s5">
+  <div class="wrap">
+    <p class="sec-num">05</p>
+    <h2>Can the grid detect a cold snap?</h2>
+    <p class="body">Forget exact degrees for a moment. Can the grid simply tell that a day is
+      unusually cold? Framed as a yes/no test on the coldest days, the result looks like this.</p>
+    <div class="cold-grid">
+      <div id="confusion" class="confusion"></div>
+      <div class="cold-explain">
+        <p class="stat-line"><span class="stat-k" id="cold-recall">–</span><span class="stat-lab">recall</span></p>
+        <p class="muted" id="cold-recall-txt"></p>
+        <p class="stat-line"><span class="stat-k" id="cold-precision">–</span><span class="stat-lab">precision</span></p>
+        <p class="muted" id="cold-precision-txt"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="s6">
+  <div class="wrap">
+    <p class="sec-num">06</p>
+    <h2>When the grid lies</h2>
+    <p class="body">The model's biggest mistakes are the most revealing part of the study. On these
+      days electricity behaviour broke its own rules — and the usual culprits are not weather at
+      all, but the calendar behaving strangely: Christmas, New Year, bank holidays, when the country
+      stops acting like itself.</p>
+    <div class="table-wrap"><table id="resid-table">
+      <thead><tr><th>Date</th><th>Day</th><th>Observed</th><th>Inferred</th><th>Off by</th><th>Context</th></tr></thead>
+      <tbody></tbody></table></div>
+  </div>
+  <figure class="chart-wide"><div id="chart-resmonth" class="plot"></div>
+    <figcaption>Prediction error through the year.</figcaption></figure>
+</section>
+
+<section class="section band" id="s7">
+  <div class="wrap">
+    <p class="sec-num">07</p>
+    <h2>What did we actually learn?</h2>
+    <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature
+      signal — but as a supplement to the calendar, not a replacement for it.</p>
+    <p class="body">The relationship is also <strong>asymmetric</strong>: the grid reads cold far
+      better than heat, because Britain heats partly with electricity but rarely cools with it. And
+      it is <strong>correlation, not measurement</strong> — demand responds to temperature,
+      daylight, behaviour and the calendar all at once, and those are deeply entangled. A grid is
+      not a thermometer. But it remembers the weather more than you might expect.</p>
+    <div class="limits">
+      <h3>Honest limitations</h3>
+      <ul>
+        <li>Weather is ERA5 reanalysis (a model blend), a documented stand-in for Met Office station data.</li>
+        <li>Recent NESO weeks are provisional and revised in arrears.</li>
+        <li>Demand fell over the decade; the models must not read that trend as a season clock.</li>
+        <li>Calendar features can encode season directly — which is why Model A and B are kept separate.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="foot-title">Can Britain's Electricity Grid Reveal the Weather?</p>
+    <p class="muted">Electricity: NESO Historic Demand Data (open CKAN API). Weather: Open-Meteo
+      ERA5 reanalysis, population-weighted across 10 GB cities. Half-hourly, 2015–2025. Models
+      evaluated on a chronological holdout. No temperature is ever used as a model input.</p>
+    <p class="muted"><a id="repo-link" href="https://github.com/elifslmz44/grid-weather">Source &amp; methodology on GitHub →</a></p>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

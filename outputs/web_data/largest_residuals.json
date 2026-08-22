@@ -1,0 +1,165 @@
+{
+  "largest_residuals": [
+    {
+      "date": "2025-05-01",
+      "weekday": "Thursday",
+      "actual_c": 19.11,
+      "predicted_c": 10.41,
+      "residual_c": 8.7,
+      "context": "unknown"
+    },
+    {
+      "date": "2025-04-29",
+      "weekday": "Tuesday",
+      "actual_c": 16.85,
+      "predicted_c": 9.67,
+      "residual_c": 7.17,
+      "context": "unknown"
+    },
+    {
+      "date": "2025-04-30",
+      "weekday": "Wednesday",
+      "actual_c": 17.86,
+      "predicted_c": 10.97,
+      "residual_c": 6.89,
+      "context": "unknown"
+    },
+    {
+      "date": "2023-06-11",
+      "weekday": "Sunday",
+      "actual_c": 20.73,
+      "predicted_c": 14.16,
+      "residual_c": 6.58,
+      "context": "weekend"
+    },
+    {
+      "date": "2025-06-28",
+      "weekday": "Saturday",
+      "actual_c": 21.69,
+      "predicted_c": 15.64,
+      "residual_c": 6.05,
+      "context": "weekend"
+    },
+    {
+      "date": "2024-11-24",
+      "weekday": "Sunday",
+      "actual_c": 13.9,
+      "predicted_c": 7.96,
+      "residual_c": 5.94,
+      "context": "weekend"
+    },
+    {
+      "date": "2023-03-08",
+      "weekday": "Wednesday",
+      "actual_c": 0.47,
+      "predicted_c": 6.33,
+      "residual_c": -5.86,
+      "context": "unknown"
+    },
+    {
+      "date": "2025-06-30",
+      "weekday": "Monday",
+      "actual_c": 23.81,
+      "predicted_c": 18.03,
+      "residual_c": 5.78,
+      "context": "unknown"
+    },
+    {
+      "date": "2024-06-13",
+      "weekday": "Thursday",
+      "actual_c": 11.32,
+      "predicted_c": 17.08,
+      "residual_c": -5.76,
+      "context": "unknown"
+    },
+    {
+      "date": "2023-10-15",
+      "weekday": "Sunday",
+      "actual_c": 6.58,
+      "predicted_c": 12.27,
+      "residual_c": -5.69,
+      "context": "weekend"
+    },
+    {
+      "date": "2023-06-12",
+      "weekday": "Monday",
+      "actual_c": 20.53,
+      "predicted_c": 14.85,
+      "residual_c": 5.68,
+      "context": "unknown"
+    },
+    {
+      "date": "2025-06-21",
+      "weekday": "Saturday",
+      "actual_c": 23.87,
+      "predicted_c": 18.28,
+      "residual_c": 5.59,
+      "context": "weekend"
+    },
+    {
+      "date": "2023-03-11",
+      "weekday": "Saturday",
+      "actual_c": 1.48,
+      "predicted_c": 7.01,
+      "residual_c": -5.53,
+      "context": "weekend"
+    },
+    {
+      "date": "2025-11-05",
+      "weekday": "Wednesday",
+      "actual_c": 14.85,
+      "predicted_c": 9.43,
+      "residual_c": 5.42,
+      "context": "unknown"
+    },
+    {
+      "date": "2024-01-15",
+      "weekday": "Monday",
+      "actual_c": -0.87,
+      "predicted_c": 4.52,
+      "residual_c": -5.39,
+      "context": "unknown"
+    },
+    {
+      "date": "2023-11-25",
+      "weekday": "Saturday",
+      "actual_c": 1.14,
+      "predicted_c": 6.48,
+      "residual_c": -5.34,
+      "context": "weekend"
+    },
+    {
+      "date": "2023-06-10",
+      "weekday": "Saturday",
+      "actual_c": 19.28,
+      "predicted_c": 14.05,
+      "residual_c": 5.22,
+      "context": "weekend"
+    },
+    {
+      "date": "2025-04-28",
+      "weekday": "Monday",
+      "actual_c": 15.8,
+      "predicted_c": 10.58,
+      "residual_c": 5.22,
+      "context": "unknown"
+    },
+    {
+      "date": "2023-03-10",
+      "weekday": "Friday",
+      "actual_c": 2.71,
+      "predicted_c": 7.88,
+      "residual_c": -5.17,
+      "context": "unknown"
+    },
+    {
+      "date": "2025-11-06",
+      "weekday": "Thursday",
+      "actual_c": 14.08,
+      "predicted_c": 9.0,
+      "residual_c": 5.08,
+      "context": "unknown"
+    }
+  ],
+  "note": "residual = actual - predicted; +ve means the model predicted too cold"
+}

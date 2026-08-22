@@ -88,8 +88,25 @@ are listed in `src/config.py`.
 
 ## Results
 
-*Not yet computed.* This section will be filled in from `outputs/model_results/` once the
-evaluation stage runs on real data.
+On a strict chronological holdout (train 2015–2022, test 2023–2025), the weather-blind model
+reconstructs Britain's daily mean temperature to **±1.77 °C (RMSE 2.19, R² 0.82)** — having
+never seen a thermometer.
+
+| Model | Features | MAE (°C) | RMSE (°C) | R² |
+|---|---|---|---|---|
+| Climatology | day-of-year average only | 2.14 | 2.74 | 0.72 |
+| Electricity only (RF) | demand behaviour, no calendar | 2.73 | 3.40 | 0.57 |
+| Electricity + calendar (RF) | demand + month/daylight/holiday | **1.77** | **2.19** | **0.82** |
+
+The honest finding is nuanced. Electricity demand *alone* (no calendar) is a **worse** guide to
+temperature than simply knowing the date — the seasonal cycle dominates. But demand *added to*
+the calendar beats climatology by **0.38 °C (≈18% lower error)**, so the grid genuinely carries
+temperature information beyond seasonality. The strongest demand signals are the **7-day rolling
+mean of demand** (importance 0.51) and the **overnight minimum** (0.20) — i.e. sustained load and
+baseline heating, exactly the heating-load fingerprint.
+
+Cold-spell detection, the heating-vs-cooling asymmetry, and the largest-error failure analysis are
+computed in `src/evaluation.py` and rendered live on the website from `outputs/web_data/`.
 
 ## Limitations
 
@@ -123,6 +140,33 @@ python -m src.signal_analysis
 ```bash
 # Phase 5 -- weather-blind features + Model A/B (metrics + predictions to outputs/)
 python -m src.modelling
+```
+
+```bash
+# Phase 6 -- evaluation: segments, cold-spell detection, asymmetry, failure analysis
+python -m src.evaluation
+```
+
+```bash
+# Phase 8 -- bundle results into the static site, then preview
+python -m src.build_site          # writes website/data.js from outputs/web_data/
+# open website/index.html in a browser, or serve locally:
+python -m http.server -d website 8000   # then visit http://localhost:8000
+```
+
+### The website
+
+The site (`website/index.html`) is a single self-contained page that reads the JSON in
+`outputs/web_data/`. Copy the results in and preview locally:
+
+```bash
+cp outputs/web_data/*.json website/data/
+cd website && python -m http.server 8000   # open http://localhost:8000
+```
+
+**Deploy** (two easy options):
+- *Netlify drop* — run the copy step above, then drag the `website/` folder onto https://app.netlify.com/drop for an instant URL.
+- *GitHub Pages* — run `./deploy_docs.sh`, commit the generated `docs/`, then set Settings > Pages > Source to `main /docs`.
 
 # List available NESO year resources without downloading:
 python -m src.ingest_neso --list
@@ -132,4 +176,4 @@ No API keys are required for the default pipeline.
 
 ## Live site
 
-*Placeholder — will be added once deployed.*
+*Deploy with `./deploy_docs.sh` (GitHub Pages) or Netlify drop — see The website above.*
