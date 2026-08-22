@@ -25,7 +25,9 @@ import logging
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
@@ -75,6 +77,19 @@ def _fit_predict(model, train, test, feats, target):
     return model.predict(test[feats]), model
 
 
+def _get_importances(fitted, feats):
+    """Return ranked importances for RF (impurity) or a linear model (|standardised coef|)."""
+    est = fitted.steps[-1][1] if hasattr(fitted, "steps") else fitted
+    if hasattr(est, "feature_importances_"):
+        vals = np.asarray(est.feature_importances_, dtype=float)
+    elif hasattr(est, "coef_"):
+        vals = np.abs(np.asarray(est.coef_, dtype=float))  # standardised inputs -> comparable
+    else:
+        return None
+    ranked = sorted(zip(feats, vals), key=lambda kv: kv[1], reverse=True)
+    return [{"feature": f, "importance": round(float(v), 4)} for f, v in ranked]
+
+
 def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     df, FEATURES_A, FEATURES_B, TARGET = build_feature_table()
     train, test = chronological_split(df, test_start_year)
@@ -90,10 +105,13 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     results["climatology"] = _metrics(y_test, yhat)
     predictions["climatology"] = [round(float(v), 2) for v in yhat]
 
-    # --- Model A / B, linear + random forest ---
+    # --- Model A / B: a regularised linear model and a random forest each ---
+    # "linear" = StandardScaler + Ridge. Plain OLS is numerically unstable here because several
+    # demand features are collinear (e.g. nd_range == nd_max - nd_min); ridge + scaling fixes it
+    # and standardised coefficients double as an interpretable importance measure.
     specs = [
-        ("linear_A", LinearRegression(), FEATURES_A),
-        ("linear_B", LinearRegression(), FEATURES_B),
+        ("linear_A", make_pipeline(StandardScaler(), Ridge(alpha=1.0)), FEATURES_A),
+        ("linear_B", make_pipeline(StandardScaler(), Ridge(alpha=1.0)), FEATURES_B),
         ("rf_A", RandomForestRegressor(n_estimators=300, min_samples_leaf=3,
                                        n_jobs=-1, random_state=42), FEATURES_A),
         ("rf_B", RandomForestRegressor(n_estimators=300, min_samples_leaf=3,
@@ -103,10 +121,9 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
         yhat, fitted = _fit_predict(model, train, test, feats, TARGET)
         results[name] = _metrics(y_test, yhat)
         predictions[name] = [round(float(v), 2) for v in yhat]
-        if hasattr(fitted, "feature_importances_"):
-            imp = sorted(zip(feats, fitted.feature_importances_),
-                         key=lambda kv: kv[1], reverse=True)
-            importances[name] = [{"feature": f, "importance": round(float(i), 4)} for f, i in imp]
+        imp = _get_importances(fitted, feats)
+        if imp is not None:
+            importances[name] = imp
 
     # --- persist ---
     config.MODEL_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -147,15 +164,20 @@ def _print_interpretation(results: dict) -> None:
     best_a = min(results[m]["mae"] for m in ("linear_A", "rf_A") if m in results)
     best_b = min(results[m]["mae"] for m in ("linear_B", "rf_B") if m in results)
     print("\n=== What this says (report back) ===")
-    print(f"Climatology (season only) MAE : {clim:.2f} C")
-    print(f"Best electricity-only  MAE    : {best_a:.2f} C  "
-          f"({'beats' if best_a < clim else 'does NOT beat'} season-only by "
-          f"{clim - best_a:+.2f} C)")
-    print(f"Best electricity+calendar MAE : {best_b:.2f} C")
-    if best_a < clim:
-        print("-> Electricity DEMAND alone carries temperature signal beyond the calendar.")
+    print(f"Climatology (season only)      : {clim:.2f} C MAE")
+    print(f"Best electricity-only (no cal) : {best_a:.2f} C  -- demand ALONE vs the calendar: "
+          f"{'better' if best_a < clim else 'worse'} by {abs(clim - best_a):.2f} C")
+    print(f"Best electricity + calendar    : {best_b:.2f} C")
+    print(f"\nKey comparison -- both know the season, but B also sees demand:")
+    delta = clim - best_b
+    pct = 100 * delta / clim
+    if best_b < clim:
+        print(f"  Model B beats climatology by {delta:.2f} C ({pct:.0f}% lower error).")
+        print(f"  -> Electricity demand carries temperature signal BEYOND the calendar,")
+        print(f"     worth about {delta:.2f} C of accuracy. But demand alone is a weaker")
+        print(f"     thermometer than simply knowing the date.")
     else:
-        print("-> Electricity alone does not beat pure seasonality; calendar context matters most.")
+        print(f"  Model B does not beat climatology -> little weather signal beyond season.")
 
 
 def _cli() -> None:
