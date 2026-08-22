@@ -21,6 +21,12 @@
   --max:     1120px;
   --tmax:    680px;
 }
+/* light mode: instrument-on-paper */
+:root[data-theme="light"]{
+  --bg:#f4f1e9; --bg2:#eae6da; --screen:#faf8f1;
+  --amber:#b25400; --amber-d:#8a4100; --cyan:#1f6f8b; --cyan-d:#14566b;
+  --ink:#1c1712; --ink-d:#6d6555; --grid:#e6e0d1; --line:#d5cebd; --red:#c0392b;
+}
 
 *{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
@@ -41,6 +47,20 @@ body::after{ /* vignette */
   content:""; position:fixed; inset:0; z-index:9997; pointer-events:none;
   background:radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%);
 }
+
+/* light-mode: drop the CRT scanlines/glow that only read on black */
+:root[data-theme="light"] body::before{ display:none; }
+:root[data-theme="light"] body::after{ background:radial-gradient(ellipse at center, rgba(0,0,0,0) 72%, rgba(0,0,0,0.05) 100%); }
+:root[data-theme="light"] .glow-a, :root[data-theme="light"] h1 .amber,
+:root[data-theme="light"] .stat .v, :root[data-theme="light"] .stat-k{ text-shadow:none; }
+:root[data-theme="light"] .panel-screen, :root[data-theme="light"] .scope-screen{ box-shadow:inset 0 0 26px rgba(0,0,0,.05); }
+
+.theme-toggle{
+  margin-left:14px; background:transparent; border:1px solid var(--line); color:var(--ink-d);
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  padding:2px 12px; border-radius:4px; cursor:pointer; transition:color .2s, border-color .2s;
+}
+.theme-toggle:hover{ color:var(--amber); border-color:var(--amber); }
 
 .wrap{ max-width:var(--tmax); margin:0 auto; padding:0 24px; }
 .mono{ font-family:"IBM Plex Mono",monospace; }
