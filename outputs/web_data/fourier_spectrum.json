@@ -1659,24 +1659,24 @@
       "relative_power": 0.1418
     },
     {
-      "period_hours": 24.07,
-      "period_label": "24 h (daily)",
-      "relative_power": 0.0681
-    },
-    {
       "period_hours": 84.0,
       "period_label": "84 h",
       "relative_power": 0.0379
     },
     {
-      "period_hours": 23.93,
-      "period_label": "24 h (daily)",
-      "relative_power": 0.0313
-    },
-    {
       "period_hours": 8.0,
       "period_label": "8 h",
       "relative_power": 0.0288
+    },
+    {
+      "period_hours": 24108.0,
+      "period_label": "24,108.0 h",
+      "relative_power": 0.017
+    },
+    {
+      "period_hours": 4383.27,
+      "period_label": "~6 months",
+      "relative_power": 0.0137
     }
   ]
 }

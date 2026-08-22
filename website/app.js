@@ -70,20 +70,38 @@
     const svg = $("hero-pulse"); if (!svg) return;
     svg.innerHTML = ""; // clear so re-theme redraws
     const p = P(), W = 1000, H = 230, mid = H / 2, ns = "http://www.w3.org/2000/svg";
+    const hod = D.hour_of_day || {};
+    const hasTemp = Array.isArray(hod.temp_by_hour_c) && hod.temp_by_hour_c.length > 1;
+    // keep the channel legend honest about what is actually drawn
+    const tag = document.querySelector(".scope-tag");
+    if (tag) tag.innerHTML = hasTemp
+      ? '<span class="ch1">CH1 ▮ DEMAND</span> &nbsp; <span class="ch2">CH2 ▮ TEMPERATURE</span>'
+      : '<span class="ch1">CH1 ▮ DEMAND</span>';
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     const defs = document.createElementNS(ns, "defs");
     defs.innerHTML = '<filter id="g"><feGaussianBlur stdDeviation="3"/></filter>'; svg.appendChild(defs);
     for (let gx = 0; gx <= W; gx += 50) addLine(gx, 0, gx, H, p.grid, 1);
     for (let gy = 0; gy <= H; gy += 46) addLine(0, gy, W, gy, p.grid, 1);
     addLine(0, mid, W, mid, p.line, 1);
-    const hod = D.hour_of_day;
-    let vals = (hod && hod.all_year_mw) ? hod.all_year_mw
-      : Array.from({ length: 48 }, (_, i) => 30000 + 8000 * Math.sin((i / 48) * 2 * Math.PI - 1.2));
-    const reps = 2, n = vals.length * reps, min = Math.min(...vals), max = Math.max(...vals), pts = [];
-    for (let i = 0; i < n; i++) { const v = vals[i % vals.length];
-      pts.push([(i / (n - 1)) * W, mid + (0.5 - (v - min) / (max - min)) * (H * 0.72)]); }
-    const d = "M " + pts.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
-    addPath(d, p.amber, 6, 0.18); const trace = addPath(d, p.amber, 2, 1);
+
+    const demandVals = hod.all_year_mw ||
+      Array.from({ length: 48 }, (_, i) => 30000 + 8000 * Math.sin((i / 48) * 2 * Math.PI - 1.2));
+    // build a normalised set of screen points for any series, spanning the width (repeated)
+    const toPts = (arr, reps, band) => { const n = arr.length * reps, mn = Math.min(...arr), mx = Math.max(...arr),
+      span = (mx - mn) || 1, pts = [];
+      for (let i = 0; i < n; i++) { const v = arr[i % arr.length];
+        pts.push([(i / (n - 1)) * W, mid + (0.5 - (v - mn) / span) * (H * band)]); } return pts; };
+
+    // CH2 temperature (drawn first, behind), if available
+    if (hasTemp) {
+      const tpts = toPts(hod.temp_by_hour_c, 2, 0.58);
+      const td = "M " + tpts.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
+      addPath(td, p.temp, 5, 0.14); addPath(td, p.temp, 1.6, 0.9);
+    }
+    // CH1 demand (front) with the sweeping beam
+    const dpts = toPts(demandVals, 2, 0.72);
+    const dd = "M " + dpts.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
+    addPath(dd, p.amber, 6, 0.18); const trace = addPath(dd, p.amber, 2, 1);
     const beam = document.createElementNS(ns, "circle"); beam.setAttribute("r", "4");
     beam.setAttribute("fill", p.beam); beam.setAttribute("filter", "url(#g)"); svg.appendChild(beam);
     if (!reduce && !instant && trace.getTotalLength) {
@@ -92,11 +110,11 @@
       let t0 = null; const step = (ts) => { if (!t0) t0 = ts; const pr = Math.min((ts - t0) / 3000, 1);
         const pt = trace.getPointAtLength(len * pr); beam.setAttribute("cx", pt.x); beam.setAttribute("cy", pt.y);
         if (pr < 1) requestAnimationFrame(step); else beam.style.opacity = 0.6; }; requestAnimationFrame(step);
-    } else { const pt = pts[pts.length - 1]; beam.setAttribute("cx", pt[0]); beam.setAttribute("cy", pt[1]); }
+    } else { const pt = dpts[dpts.length - 1]; beam.setAttribute("cx", pt[0]); beam.setAttribute("cy", pt[1]); }
     function addLine(x1, y1, x2, y2, col, w) { const l = document.createElementNS(ns, "line");
       l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2);
       l.setAttribute("stroke", col); l.setAttribute("stroke-width", w); svg.appendChild(l); }
-    function addPath(dd, col, w, op) { const q = document.createElementNS(ns, "path"); q.setAttribute("d", dd);
+    function addPath(dpath, col, w, op) { const q = document.createElementNS(ns, "path"); q.setAttribute("d", dpath);
       q.setAttribute("fill", "none"); q.setAttribute("stroke", col); q.setAttribute("stroke-width", w);
       q.setAttribute("opacity", op); q.setAttribute("stroke-linejoin", "round"); svg.appendChild(q); return q; }
   }
@@ -105,19 +123,19 @@
   function heartbeat() { const p = P(), h = D.hour_of_day;
     if (h) plotLine("chart-hod", [ glow(h.hour, h.all_year_mw, p.amber, 2.4),
       { x: h.hour, y: h.all_year_mw, name: "All year", mode: "lines", line: { color: p.ink, width: 2.4 },
-        hovertemplate: "%{x}:00 · %{y:,.0f} MW<extra>all year</extra>" },
+        hovertemplate: "all year · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
       { x: h.hour, y: h.winter_mw, name: "Winter", mode: "lines", line: { color: p.amber, width: 2 },
-        hovertemplate: "%{x}:00 · %{y:,.0f} MW<extra>winter</extra>" },
+        hovertemplate: "winter · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
       { x: h.hour, y: h.summer_mw, name: "Summer", mode: "lines", line: { color: p.temp, width: 2 },
-        hovertemplate: "%{x}:00 · %{y:,.0f} MW<extra>summer</extra>" },
+        hovertemplate: "summer · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
     ], { xaxis: AXS({ title: "hour of day (local)", dtick: 3 }), yaxis: AX({ title: "mean demand (MW)" }) });
     else hide($("chart-hod"));
     const w = D.weekday_weekend;
     if (w) plotLine("chart-ww", [
       { x: w.hour, y: w.weekday_mw, name: "Weekday", mode: "lines", line: { color: p.amber, width: 2.4 },
-        hovertemplate: "%{x}:00 · %{y:,.0f} MW<extra>weekday</extra>" },
+        hovertemplate: "weekday · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
       { x: w.hour, y: w.weekend_mw, name: "Weekend", mode: "lines", line: { color: p.temp, width: 2.4 },
-        hovertemplate: "%{x}:00 · %{y:,.0f} MW<extra>weekend</extra>" },
+        hovertemplate: "weekend · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
     ], { xaxis: AXS({ title: "hour of day (local)", dtick: 3 }), yaxis: AX({ title: "mean demand (MW)" }) });
     else hide($("chart-ww"));
   }

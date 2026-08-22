@@ -138,6 +138,15 @@ def hour_of_day_profile(demand: pd.DataFrame) -> dict:
         "peak_mw": float(overall.max()),
         "trough_mw": float(overall.min()),
     }
+    # Real mean temperature by hour of day (for the hero's second channel), if weather is present.
+    wpath = config.PROCESSED_DIR / "weather_hourly.csv"
+    if wpath.exists():
+        w = pd.read_csv(wpath)
+        wloc = pd.to_datetime(w["timestamp_utc"], utc=True).dt.tz_convert(config.TIMEZONE)
+        tbh = (pd.DataFrame({"hour": wloc.dt.hour, "t": w["gb_temp_pop_weighted"]})
+               .groupby("hour")["t"].mean())
+        result["temp_hours"] = tbh.index.tolist()
+        result["temp_by_hour_c"] = tbh.round(2).tolist()
     _save_json("hour_of_day.json", result)
     return result
 

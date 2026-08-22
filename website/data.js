@@ -14955,24 +14955,24 @@ window.GRID_DATA = {
         "relative_power": 0.1418
       },
       {
-        "period_hours": 24.07,
-        "period_label": "24 h (daily)",
-        "relative_power": 0.0681
-      },
-      {
         "period_hours": 84.0,
         "period_label": "84 h",
         "relative_power": 0.0379
       },
       {
-        "period_hours": 23.93,
-        "period_label": "24 h (daily)",
-        "relative_power": 0.0313
-      },
-      {
         "period_hours": 8.0,
         "period_label": "8 h",
         "relative_power": 0.0288
+      },
+      {
+        "period_hours": 24108.0,
+        "period_label": "24,108.0 h",
+        "relative_power": 0.017
+      },
+      {
+        "period_hours": 4383.27,
+        "period_label": "~6 months",
+        "relative_power": 0.0137
       }
     ]
   },
@@ -15560,7 +15560,59 @@ window.GRID_DATA = {
     "peak_hour_local": 18.0,
     "trough_hour_local": 4.5,
     "peak_mw": 34949.21229467397,
-    "trough_mw": 21144.747635639622
+    "trough_mw": 21144.747635639622,
+    "temp_hours": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "temp_by_hour_c": [
+      9.51,
+      9.23,
+      9.01,
+      8.78,
+      8.58,
+      8.4,
+      8.27,
+      8.3,
+      8.66,
+      9.36,
+      10.33,
+      11.34,
+      12.22,
+      12.88,
+      13.25,
+      13.5,
+      13.51,
+      13.26,
+      12.86,
+      12.34,
+      11.75,
+      11.08,
+      10.42,
+      9.91
+    ]
   },
   "largest_residuals": {
     "largest_residuals": [
