@@ -1,6 +1,7 @@
 /* Renders the readout from window.GRID_DATA (bundled by src/build_site.py).
-   Colours are read live from the active theme, so the light/dark toggle re-themes charts too.
-   Motion (draw-in, reveals) respects prefers-reduced-motion. */
+   Colours read live from the active theme (light/dark toggle re-themes charts).
+   Line charts use a "scrub reveal": a faint full line fixes the axis; a bright line draws in
+   when scrolled into view, then follows the cursor as you hover. Reduced-motion → no draw-in. */
 
 (function () {
   "use strict";
@@ -8,8 +9,7 @@
   const MONO = "IBM Plex Mono, monospace";
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const CFG = { displayModeBar: false, responsive: true };
-  let instant = false; // when true, skip draw-in animation (used during theme re-render)
-  let started = false; // guard: init must run exactly once (avoids duplicate listeners)
+  let instant = false, started = false;
 
   const PAL = {
     dark:  { panel: "#100c08", amber: "#ffb000", temp: "#52d6c6", ink: "#f2e3bf",
@@ -19,7 +19,6 @@
   };
   const themeName = () => (document.documentElement.dataset.theme === "light" ? "light" : "dark");
   const P = () => PAL[themeName()];
-
   const $ = (id) => document.getElementById(id);
   const hide = (el) => { const f = el && el.closest(".panel, .telemetry, section"); if (f) f.style.display = "none"; };
   const fmt = (x, d = 2) => (x == null ? "–" : Number(x).toFixed(d));
@@ -30,7 +29,7 @@
   }, extra || {}); }
   function AXS(extra) { const p = P(); return AX(Object.assign({ showspikes: true, spikecolor: p.amber,
     spikethickness: 1, spikedash: "dot", spikemode: "across", spikesnap: "cursor" }, extra || {})); }
-  function base(over) { const p = P(); return Object.assign({
+  function layoutBase(over) { const p = P(); return Object.assign({
     paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     font: { family: MONO, size: 12, color: p.soft }, margin: { l: 62, r: 20, t: 16, b: 46 }, showlegend: false,
     xaxis: AX(), yaxis: AX(),
@@ -38,41 +37,68 @@
   }, over || {}); }
 
   function plot(id, traces, layout) { const el = $(id); if (!el) return;
-    try { Plotly.newPlot(el, traces, base(layout), CFG); } catch (e) { console.error(id, e); hide(el); } }
-
-  function plotLine(id, traces, layout) { const el = $(id); if (!el) return;
-    try {
-      if (reduce || instant) { Plotly.newPlot(el, traces, base(layout), CFG); return; }
-      const reals = traces.map((t) => (t.line && Array.isArray(t.y)) ? t.y.slice() : null);
-      let mn = Infinity; reals.forEach((a) => { if (a) a.forEach((v) => { if (v < mn) mn = v; }); });
-      if (!isFinite(mn)) mn = 0;
-      traces.forEach((t, i) => { if (reals[i]) t.y = reals[i].map(() => mn); });
-      Plotly.newPlot(el, traces, base(layout), CFG).then(() => requestAnimationFrame(() =>
-        Plotly.animate(el, { data: traces.map((t, i) => reals[i] ? { y: reals[i] } : {}) },
-          { transition: { duration: 1100, easing: "cubic-in-out" }, frame: { duration: 1100 } })));
-    } catch (e) { console.error(id, e); try { Plotly.newPlot(el, traces, base(layout), CFG); } catch (_) { hide(el); } } }
+    try { Plotly.newPlot(el, traces, layoutBase(layout), CFG); } catch (e) { console.error(id, e); hide(el); } }
 
   function plotBars(id, traces, layout) { const el = $(id); if (!el) return;
     try {
-      if (reduce || instant) { Plotly.newPlot(el, traces, base(layout), CFG); return; }
+      if (reduce || instant) { Plotly.newPlot(el, traces, layoutBase(layout), CFG); return; }
       const realX = traces.map((t) => Array.isArray(t.x) ? t.x.slice() : null);
       traces.forEach((t, i) => { if (realX[i]) t.x = realX[i].map(() => 0); });
-      Plotly.newPlot(el, traces, base(layout), CFG).then(() => requestAnimationFrame(() =>
+      Plotly.newPlot(el, traces, layoutBase(layout), CFG).then(() => requestAnimationFrame(() =>
         Plotly.animate(el, { data: traces.map((t, i) => realX[i] ? { x: realX[i] } : {}) },
           { transition: { duration: 900, easing: "cubic-out" }, frame: { duration: 900 } })));
-    } catch (e) { console.error(id, e); try { Plotly.newPlot(el, traces, base(layout), CFG); } catch (_) {} } }
+    } catch (e) { console.error(id, e); try { Plotly.newPlot(el, traces, layoutBase(layout), CFG); } catch (_) {} } }
 
-  const glow = (x, y, color, width) => ({ x, y, mode: "lines",
-    line: { color, width: (width || 2) * 5 }, opacity: 0.12, hoverinfo: "skip", showlegend: false });
+  /* Scrub-reveal line chart.
+     series: [{x, y, color, width, name, hovertemplate, fill, fillcolor}]
+     A faint full copy of each series fixes the axis + carries hover; a bright copy is revealed
+     from the left — animated once on load, then driven by the cursor on hover. */
+  function plotScrub(id, series, layout) {
+    const el = $(id); if (!el || !series.length) return;
+    try {
+      const p = P();
+      const baseTr = series.map((s) => ({ x: s.x, y: s.y, mode: "lines",
+        line: { color: s.color, width: (s.width || 2) * 0.5 }, opacity: 0.22,
+        name: s.name, hovertemplate: s.hovertemplate, showlegend: false }));
+      const hiTr = series.map((s) => ({ x: [], y: [], mode: "lines",
+        line: { color: s.color, width: s.width || 2 }, fill: s.fill, fillcolor: s.fillcolor,
+        hoverinfo: "skip", showlegend: false }));
+      const traces = baseTr.concat(hiTr);
+      const hiIdx = series.map((_, i) => series.length + i);
+      const N = series[0].x.length;
+      // build the legend from the real series, so labels + colours always match the curves
+      const panel = el.closest(".panel-screen");
+      const leg = panel && panel.querySelector(".chlegend");
+      if (leg) leg.innerHTML = series.map((s) => `<span style="color:${s.color}">▮ ${s.name}</span>`).join(" ");
+      const lay = layoutBase(Object.assign({ hovermode: "x unified" }, layout || {}));
+      const setK = (k) => { try { Plotly.restyle(el,
+        { x: series.map((s) => s.x.slice(0, k)), y: series.map((s) => s.y.slice(0, k)) }, hiIdx); } catch (e) {} };
+      let animId = 0;
+      const animateTo = (target, dur) => { const my = ++animId; let t0 = null;
+        const step = (ts) => { if (my !== animId) return; if (t0 == null) t0 = ts; const pr = Math.min((ts - t0) / dur, 1);
+          setK(Math.max(1, Math.round(pr * target))); if (pr < 1) requestAnimationFrame(step); };
+        requestAnimationFrame(step); };
+      Plotly.newPlot(el, traces, lay, CFG).then(() => {
+        if (reduce || instant) { setK(N); return; }
+        animateTo(N, 1100); // draw in once on load
+        // follow the cursor: reveal exactly up to the hovered point, cancelling any running animation
+        if (el.on) el.on("plotly_hover", (ev) => { const pt = ev.points && ev.points[0]; if (!pt) return;
+          const idx = pt.pointIndex != null ? pt.pointIndex : pt.pointNumber; if (idx == null) return;
+          ++animId; setK(idx + 1); });
+        // restore the full line only when the cursor truly leaves the chart (not between points)
+        el.addEventListener("mouseleave", () => animateTo(N, 450));
+      });
+    } catch (e) { console.error(id, e);
+      plot(id, series.map((s) => ({ x: s.x, y: s.y, mode: "lines", line: { color: s.color, width: s.width } })), layout); }
+  }
 
-  /* ---------- hero scope ---------- */
+  /* ---------- hero scope (two channels) ---------- */
   function heroScope() {
     const svg = $("hero-pulse"); if (!svg) return;
-    svg.innerHTML = ""; // clear so re-theme redraws
+    svg.innerHTML = "";
     const p = P(), W = 1000, H = 230, mid = H / 2, ns = "http://www.w3.org/2000/svg";
     const hod = D.hour_of_day || {};
     const hasTemp = Array.isArray(hod.temp_by_hour_c) && hod.temp_by_hour_c.length > 1;
-    // keep the channel legend honest about what is actually drawn
     const tag = document.querySelector(".scope-tag");
     if (tag) tag.innerHTML = hasTemp
       ? '<span class="ch1">CH1 ▮ DEMAND</span> &nbsp; <span class="ch2">CH2 ▮ TEMPERATURE</span>'
@@ -83,24 +109,17 @@
     for (let gx = 0; gx <= W; gx += 50) addLine(gx, 0, gx, H, p.grid, 1);
     for (let gy = 0; gy <= H; gy += 46) addLine(0, gy, W, gy, p.grid, 1);
     addLine(0, mid, W, mid, p.line, 1);
-
     const demandVals = hod.all_year_mw ||
       Array.from({ length: 48 }, (_, i) => 30000 + 8000 * Math.sin((i / 48) * 2 * Math.PI - 1.2));
-    // build a normalised set of screen points for any series, spanning the width (repeated)
     const toPts = (arr, reps, band) => { const n = arr.length * reps, mn = Math.min(...arr), mx = Math.max(...arr),
       span = (mx - mn) || 1, pts = [];
       for (let i = 0; i < n; i++) { const v = arr[i % arr.length];
         pts.push([(i / (n - 1)) * W, mid + (0.5 - (v - mn) / span) * (H * band)]); } return pts; };
-
-    // CH2 temperature (drawn first, behind), if available
-    if (hasTemp) {
-      const tpts = toPts(hod.temp_by_hour_c, 2, 0.58);
-      const td = "M " + tpts.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
-      addPath(td, p.temp, 5, 0.14); addPath(td, p.temp, 1.6, 0.9);
-    }
-    // CH1 demand (front) with the sweeping beam
-    const dpts = toPts(demandVals, 2, 0.72);
-    const dd = "M " + dpts.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
+    if (hasTemp) { const tp = toPts(hod.temp_by_hour_c, 2, 0.58);
+      const td = "M " + tp.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
+      addPath(td, p.temp, 5, 0.14); addPath(td, p.temp, 1.6, 0.9); }
+    const dp = toPts(demandVals, 2, 0.72);
+    const dd = "M " + dp.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
     addPath(dd, p.amber, 6, 0.18); const trace = addPath(dd, p.amber, 2, 1);
     const beam = document.createElementNS(ns, "circle"); beam.setAttribute("r", "4");
     beam.setAttribute("fill", p.beam); beam.setAttribute("filter", "url(#g)"); svg.appendChild(beam);
@@ -110,7 +129,7 @@
       let t0 = null; const step = (ts) => { if (!t0) t0 = ts; const pr = Math.min((ts - t0) / 3000, 1);
         const pt = trace.getPointAtLength(len * pr); beam.setAttribute("cx", pt.x); beam.setAttribute("cy", pt.y);
         if (pr < 1) requestAnimationFrame(step); else beam.style.opacity = 0.6; }; requestAnimationFrame(step);
-    } else { const pt = dpts[dpts.length - 1]; beam.setAttribute("cx", pt[0]); beam.setAttribute("cy", pt[1]); }
+    } else { const pt = dp[dp.length - 1]; beam.setAttribute("cx", pt[0]); beam.setAttribute("cy", pt[1]); }
     function addLine(x1, y1, x2, y2, col, w) { const l = document.createElementNS(ns, "line");
       l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2);
       l.setAttribute("stroke", col); l.setAttribute("stroke-width", w); svg.appendChild(l); }
@@ -121,20 +140,20 @@
 
   /* ---------- 01 ---------- */
   function heartbeat() { const p = P(), h = D.hour_of_day;
-    if (h) plotLine("chart-hod", [ glow(h.hour, h.all_year_mw, p.amber, 2.4),
-      { x: h.hour, y: h.all_year_mw, name: "All year", mode: "lines", line: { color: p.ink, width: 2.4 },
-        hovertemplate: "all year · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
-      { x: h.hour, y: h.winter_mw, name: "Winter", mode: "lines", line: { color: p.amber, width: 2 },
+    if (h) plotScrub("chart-hod", [
+      { x: h.hour, y: h.winter_mw, color: p.amber, width: 2, name: "winter",
         hovertemplate: "winter · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
-      { x: h.hour, y: h.summer_mw, name: "Summer", mode: "lines", line: { color: p.temp, width: 2 },
+      { x: h.hour, y: h.all_year_mw, color: p.ink, width: 2.4, name: "all year",
+        hovertemplate: "all year · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
+      { x: h.hour, y: h.summer_mw, color: p.temp, width: 2, name: "summer",
         hovertemplate: "summer · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
     ], { xaxis: AXS({ title: "hour of day (local)", dtick: 3 }), yaxis: AX({ title: "mean demand (MW)" }) });
     else hide($("chart-hod"));
     const w = D.weekday_weekend;
-    if (w) plotLine("chart-ww", [
-      { x: w.hour, y: w.weekday_mw, name: "Weekday", mode: "lines", line: { color: p.amber, width: 2.4 },
+    if (w) plotScrub("chart-ww", [
+      { x: w.hour, y: w.weekday_mw, color: p.amber, width: 2.4, name: "weekday",
         hovertemplate: "weekday · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
-      { x: w.hour, y: w.weekend_mw, name: "Weekend", mode: "lines", line: { color: p.temp, width: 2.4 },
+      { x: w.hour, y: w.weekend_mw, color: p.temp, width: 2.4, name: "weekend",
         hovertemplate: "weekend · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
     ], { xaxis: AXS({ title: "hour of day (local)", dtick: 3 }), yaxis: AX({ title: "mean demand (MW)" }) });
     else hide($("chart-ww"));
@@ -147,8 +166,8 @@
       y0: 0, y1: 1, line: { color: p.temp, width: 1, dash: "dot" } }));
     const anns = refs.map(([q, t]) => ({ x: Math.log10(q), y: 1.04, yref: "paper", text: t, showarrow: false,
       font: { color: p.temp, size: 11, family: MONO } }));
-    plotLine("chart-fft", [{ x: f.period_hours, y: f.relative_power, mode: "lines",
-      line: { color: p.amber, width: 1.4 }, fill: "tozeroy", fillcolor: "rgba(255,176,0,0.07)",
+    plotScrub("chart-fft", [{ x: f.period_hours, y: f.relative_power, color: p.amber, width: 1.4,
+      fill: "tozeroy", fillcolor: "rgba(255,176,0,0.07)", name: "power",
       hovertemplate: "period %{x:.0f} h · power %{y:.3f}<extra></extra>" }],
       { xaxis: AXS({ title: "period (hours)", type: "log" }), yaxis: AX({ title: "relative power", rangemode: "tozero" }),
         shapes, annotations: anns });
@@ -178,12 +197,12 @@
           the date itself.`; }
     }
     if (pr && pr.date && pr.rf_B) {
-      plotLine("chart-ts", [
-        { x: pr.date, y: pr.actual, name: "Observed", mode: "lines", line: { color: p.temp, width: 1.3 },
-          hovertemplate: "%{x|%d %b %Y}<br>observed %{y:.1f} °C<extra></extra>" },
-        { x: pr.date, y: pr.rf_B, name: "Inferred", mode: "lines", line: { color: p.amber, width: 1.3 },
-          hovertemplate: "%{x|%d %b %Y}<br>inferred %{y:.1f} °C<extra></extra>" },
-      ], { xaxis: AXS({ type: "date" }), yaxis: AXS({ title: "daily mean temp (°C)" }), hovermode: "x unified" });
+      plotScrub("chart-ts", [
+        { x: pr.date, y: pr.actual, color: p.temp, width: 1.4, name: "observed",
+          hovertemplate: "observed · %{x|%d %b %Y} · %{y:.1f} °C<extra></extra>" },
+        { x: pr.date, y: pr.rf_B, color: p.amber, width: 1.4, name: "inferred",
+          hovertemplate: "inferred · %{x|%d %b %Y} · %{y:.1f} °C<extra></extra>" },
+      ], { xaxis: AXS({ type: "date" }), yaxis: AXS({ title: "daily mean temp (°C)" }) });
       const lim = [Math.min(...pr.actual, ...pr.rf_B), Math.max(...pr.actual, ...pr.rf_B)];
       plot("chart-scatter", [
         { x: pr.actual, y: pr.rf_B, mode: "markers", marker: { color: p.temp, size: 5, opacity: 0.4 },
@@ -212,7 +231,7 @@
     const cm = c.confusion_matrix, el = $("confusion");
     if (el) { const cell = (n, lab, col, dark) => `<div class="cm-cell" style="background:${col};color:${dark ? "#0a0806" : p.ink}"><span class="cm-num">${n}</span><span class="cm-lab">${lab}</span></div>`;
       el.innerHTML = `<div></div><div class="cm-axis">pred:<br>not cold</div><div class="cm-axis">pred:<br>cold</div>` +
-        `<div class="cm-axis">actual:<br>not cold</div>` + cell(cm.tn, "correct", p.line) + cell(cm.fp, "false alarm", p.cyan_d || "#2f8f84", true) +
+        `<div class="cm-axis">actual:<br>not cold</div>` + cell(cm.tn, "correct", p.line) + cell(cm.fp, "false alarm", "#2f8f84", true) +
         `<div class="cm-axis">actual:<br>cold</div>` + cell(cm.fn, "missed", "#5a3a10") + cell(cm.tp, "caught", p.temp, true); }
     if ($("cold-recall")) $("cold-recall").textContent = fmt(c.recall * 100, 0) + "%";
     if ($("cold-precision")) $("cold-precision").textContent = fmt(c.precision * 100, 0) + "%";
@@ -261,24 +280,17 @@
   ).forEach((el) => el.classList.add("reveal")); }
   function revealNew(container) { if (!revealObserver) return;
     container.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el)); }
-
   function renderSection(id) { const fn = SECTION_RENDER[id]; if (!fn) return;
     try { fn(); rendered.add(id); } catch (e) { console.error(id, e); } }
 
   function applyTheme(t) { document.documentElement.dataset.theme = t;
     const btn = $("theme-toggle"); if (btn) btn.textContent = t === "light" ? "☾ DARK" : "☀ LIGHT";
     try { localStorage.setItem("gw-theme", t); } catch (e) {} }
-
-  function retheme() { // re-draw everything already on screen in the new palette, without animation
-    instant = true;
-    heroScope();
-    rendered.forEach((id) => { try { SECTION_RENDER[id](); } catch (e) { console.error(id, e); } });
-    instant = false;
-  }
+  function retheme() { instant = true; heroScope();
+    rendered.forEach((id) => { try { SECTION_RENDER[id](); } catch (e) { console.error(id, e); } }); instant = false; }
 
   function init() {
     if (started) return; started = true;
-    // theme: saved > system preference > dark
     let t; try { t = localStorage.getItem("gw-theme"); } catch (e) {}
     if (!t) t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
     applyTheme(t);
