@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="scroll-progress" aria-hidden="true"></div>
 
 <div class="statusbar mono">
   <span><span class="dot">◉</span> NESO · GB TRANSMISSION SYSTEM</span>
@@ -67,14 +68,14 @@
     whole curve; summer flattens it. None of this mentions temperature yet — it is pure behaviour and
     physics, the raw material the experiment will work from.</p>
   <div class="panel"><div class="panel-screen">
-    <div class="chlegend"><span class="c1">all year / winter</span><span class="c2">summer</span></div>
+    <div class="chlegend"></div>
     <div id="chart-hod" class="plot"></div></div>
     <p class="cap">FIG.01 — mean National Demand by time of day (local), all year and by season.</p></div>
   <p class="body">The working week leaves its own mark. Weekday mornings start hard; weekends sleep
     in. That gap has nothing to do with the weather — and separating this behavioural rhythm from the
     genuine weather signal is the core challenge of everything that follows.</p>
   <div class="panel"><div class="panel-screen">
-    <div class="chlegend"><span class="c1">weekday</span><span class="c2">weekend</span></div>
+    <div class="chlegend"></div>
     <div id="chart-ww" class="plot"></div></div>
     <p class="cap">FIG.02 — weekday vs weekend demand across the day.</p></div>
 </section>
@@ -146,7 +147,7 @@
   <div class="stat-row" id="stat-row"></div>
   <p class="body" id="s4-verdict"></p>
   <div class="panel"><div class="panel-screen">
-    <div class="chlegend"><span class="c2">observed</span><span class="c1">inferred from grid</span></div>
+    <div class="chlegend"></div>
     <div id="chart-ts" class="plot"></div></div>
     <p class="cap">FIG.04 — observed vs grid-inferred daily temperature, holdout years. Drag to zoom.</p></div>
   <div class="two-charts">

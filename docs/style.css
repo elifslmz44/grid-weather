@@ -238,6 +238,25 @@ footer .foot-title{ font-family:"VT323",monospace; font-size:1.6rem; color:var(-
 footer .muted{ color:var(--ink-d); max-width:46em; }
 footer a{ color:var(--cyan); }
 
+/* ---------- scroll progress bar ---------- */
+#scroll-progress{ position:fixed; top:0; left:0; height:2px; width:0;
+  background:var(--amber); z-index:60; box-shadow:0 0 8px var(--amber);
+  transition:width .1s linear; }
+:root[data-theme="light"] #scroll-progress{ box-shadow:none; }
+
+/* ---------- module navigation dots ---------- */
+#modnav{ position:fixed; right:20px; top:50%; transform:translateY(-50%); z-index:55;
+  display:flex; flex-direction:column; gap:14px; }
+#modnav .dot{ position:relative; width:9px; height:9px; border:1px solid var(--ink-d);
+  border-radius:50%; display:block; transition:background .2s, border-color .2s; }
+#modnav .dot:hover, #modnav .dot.active{ background:var(--amber); border-color:var(--amber); }
+#modnav .dot-label{ position:absolute; right:18px; top:50%; transform:translateY(-50%);
+  white-space:nowrap; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em;
+  color:var(--ink-d); background:var(--bg2); border:1px solid var(--line); border-radius:4px;
+  padding:2px 8px; opacity:0; pointer-events:none; transition:opacity .2s; }
+#modnav .dot:hover .dot-label{ opacity:1; }
+@media (max-width:900px){ #modnav{ display:none; } }
+
 /* ---------- scroll reveals ---------- */
 .reveal{ opacity:0; transform:translateY(30px);
   transition:opacity .7s ease, transform .75s cubic-bezier(.2,.75,.2,1); }

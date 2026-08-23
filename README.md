@@ -149,24 +149,24 @@ python -m src.evaluation
 
 ```bash
 # Phase 8 -- bundle results into the static site, then preview
-python -m src.build_site          # writes website/data.js from outputs/web_data/
-# open website/index.html in a browser, or serve locally:
-python -m http.server -d website 8000   # then visit http://localhost:8000
+python -m src.build_site          # writes docs/data.js from outputs/web_data/
+# open docs/index.html in a browser, or serve locally:
+python -m http.server -d docs 8000   # then visit http://localhost:8000
 ```
 
 ### The website
 
-The site (`website/index.html`) is a single self-contained page that reads the JSON in
-`outputs/web_data/`. Copy the results in and preview locally:
+The site (`docs/index.html`) is a self-contained page that reads a single bundled
+`docs/data.js`. Build the bundle from the frozen results, then preview locally:
 
 ```bash
-cp outputs/web_data/*.json website/data/
-cd website && python -m http.server 8000   # open http://localhost:8000
+python -m src.build_site                 # writes docs/data.js from outputs/web_data/
+python -m http.server -d docs 8000       # open http://localhost:8000
 ```
 
-**Deploy** (two easy options):
-- *Netlify drop* — run the copy step above, then drag the `website/` folder onto https://app.netlify.com/drop for an instant URL.
-- *GitHub Pages* — run `./deploy_docs.sh`, commit the generated `docs/`, then set Settings > Pages > Source to `main /docs`.
+**Deploy (GitHub Pages):** commit `docs/` (including `docs/data.js`), push, then set
+Settings → Pages → Source to *Deploy from a branch*, branch `main`, folder `/docs`.
+The site goes live at `https://<username>.github.io/grid-weather/`.
 
 # List available NESO year resources without downloading:
 python -m src.ingest_neso --list
@@ -176,4 +176,4 @@ No API keys are required for the default pipeline.
 
 ## Live site
 
-*Deploy with `./deploy_docs.sh` (GitHub Pages) or Netlify drop — see The website above.*
+*Deploy: commit `docs/`, push, then Settings → Pages → Deploy from a branch → `main` / `/docs`. See The website above.*

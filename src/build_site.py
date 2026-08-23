@@ -24,20 +24,21 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 log = logging.getLogger("build_site")
 
 WEB_DATA = config.OUTPUTS_DIR / "web_data"
-SITE_DIR = config.PROJECT_ROOT / "website"
+SITE_DIR = config.PROJECT_ROOT / "docs"   # GitHub Pages serves from repo root or /docs
 
 
 def build() -> None:
-    if not WEB_DATA.exists():
-        raise FileNotFoundError("No outputs/web_data. Run the analysis phases first "
-                                "(signal_analysis, modelling, evaluation).")
     bundle = {}
-    for f in sorted(WEB_DATA.glob("*.json")):
-        try:
-            bundle[f.stem] = json.loads(f.read_text())
-            log.info("bundled %s", f.name)
-        except json.JSONDecodeError as exc:
-            log.warning("skipping %s (%s)", f.name, exc)
+    if WEB_DATA.exists():
+        for f in sorted(WEB_DATA.glob("*.json")):
+            try:
+                bundle[f.stem] = json.loads(f.read_text())
+                log.info("bundled %s", f.name)
+            except json.JSONDecodeError as exc:
+                log.warning("skipping %s (%s)", f.name, exc)
+    if not bundle:
+        log.warning("No outputs/web_data found — writing an empty bundle so the site still "
+                    "builds and deploys. Run the analysis phases, then rebuild to populate charts.")
 
     SITE_DIR.mkdir(exist_ok=True)
     out = SITE_DIR / "data.js"
