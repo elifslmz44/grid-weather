@@ -116,6 +116,16 @@
     <span class="k-temp">50 Hz</span>; that tight balance is why demand tracks reality so faithfully.</p>
 </div></div>
 
+<!-- telemetry: long-term trend (populated from data) -->
+<div class="telemetry"><div class="tcard" id="trend-card" style="display:none">
+  <p class="thead">TELEMETRY LOG · LONG-TERM TREND</p>
+  <h4>The incredible shrinking grid</h4>
+  <p>Britain's electricity demand has been quietly <em>falling</em> — by roughly
+    <span class="big" id="trend-pct">–</span> every year over the decade, as LED lighting, better
+    efficiency and rooftop solar eat into it. The models have to be careful not to mistake that slow
+    decline for a change of season — which is exactly why the long-term trend is measured and removed.</p>
+</div></div>
+
 <!-- 03 -->
 <section class="section" id="s3">
   <div class="wrap"><p class="modtag mono">MODULE 03 // EXPERIMENT DESIGN</p>
@@ -143,7 +153,8 @@
   <div class="wrap"><p class="modtag mono">MODULE 04 // INFERENCE</p>
     <h2>Can the grid predict temperature?</h2></div>
   <p class="body">Tested on years the model never trained on, here is how close the grid's guess comes
-    to the real thermometer.</p>
+    to the real thermometer. Switch what the model is allowed to see:</p>
+  <div class="seg" id="model-toggle" role="group" aria-label="Choose model inputs"></div>
   <div class="stat-row" id="stat-row"></div>
   <p class="body" id="s4-verdict"></p>
   <div class="panel"><div class="panel-screen">
