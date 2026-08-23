@@ -115,17 +115,21 @@
       span = (mx - mn) || 1, pts = [];
       for (let i = 0; i < n; i++) { const v = arr[i % arr.length];
         pts.push([(i / (n - 1)) * W, mid + (0.5 - (v - mn) / span) * (H * band)]); } return pts; };
+    let tempTrace = null;
     if (hasTemp) { const tp = toPts(hod.temp_by_hour_c, 2, 0.58);
       const td = "M " + tp.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
-      addPath(td, p.temp, 5, 0.14); addPath(td, p.temp, 1.6, 0.9); }
+      addPath(td, p.temp, 5, 0.14); tempTrace = addPath(td, p.temp, 1.6, 0.9); }
     const dp = toPts(demandVals, 2, 0.72);
     const dd = "M " + dp.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(" L ");
     addPath(dd, p.amber, 6, 0.18); const trace = addPath(dd, p.amber, 2, 1);
     const beam = document.createElementNS(ns, "circle"); beam.setAttribute("r", "4");
     beam.setAttribute("fill", p.beam); beam.setAttribute("filter", "url(#g)"); svg.appendChild(beam);
+    const drawIn = (path, dur) => { if (!path || !path.getTotalLength) return;
+      const len = path.getTotalLength(); path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+      path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: dur, easing: "linear", fill: "forwards" }); };
     if (!reduce && !instant && trace.getTotalLength) {
-      const len = trace.getTotalLength(); trace.style.strokeDasharray = len; trace.style.strokeDashoffset = len;
-      trace.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 3000, easing: "linear", fill: "forwards" });
+      drawIn(trace, 3000); drawIn(tempTrace, 3000); // both channels sweep in together
+      const len = trace.getTotalLength();
       let t0 = null; const step = (ts) => { if (!t0) t0 = ts; const pr = Math.min((ts - t0) / 3000, 1);
         const pt = trace.getPointAtLength(len * pr); beam.setAttribute("cx", pt.x); beam.setAttribute("cy", pt.y);
         if (pr < 1) requestAnimationFrame(step); else beam.style.opacity = 0.6; }; requestAnimationFrame(step);
@@ -184,9 +188,10 @@
   function prediction() { const p = P(), m = D.metrics, pr = D.predictions;
     if (m && m.metrics && m.metrics.rf_B) {
       const b = m.metrics.rf_B, row = $("stat-row");
-      if (row) { row.innerHTML = [["±" + fmt(b.mae, 2), "°C", "mean error"], [fmt(b.rmse, 2), "°C", "RMSE"],
-        [fmt(b.r2, 2), "R²", "variance explained"]]
-        .map(([v, u, l]) => `<div class="stat reveal"><span class="v">${v}</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
+      if (row) { row.innerHTML = [["±", b.mae, 2, "°C", "mean error"], ["", b.rmse, 2, "°C", "RMSE"],
+        ["", b.r2, 2, "R²", "variance explained"]]
+        .map(([pre, val, dec, u, l]) => `<div class="stat reveal"><span class="v" data-t="${val}" data-d="${dec}" data-p="${pre}">${pre}0</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
+        row.querySelectorAll(".v").forEach((el) => countUp(el, +el.dataset.t, +el.dataset.d, el.dataset.p, ""));
         revealNew(row); }
       const clim = m.metrics.climatology, v = $("s4-verdict");
       if (v && clim) { const impr = ((clim.mae - b.mae) / clim.mae) * 100;
@@ -233,8 +238,8 @@
       el.innerHTML = `<div></div><div class="cm-axis">pred:<br>not cold</div><div class="cm-axis">pred:<br>cold</div>` +
         `<div class="cm-axis">actual:<br>not cold</div>` + cell(cm.tn, "correct", p.line) + cell(cm.fp, "false alarm", "#2f8f84", true) +
         `<div class="cm-axis">actual:<br>cold</div>` + cell(cm.fn, "missed", "#5a3a10") + cell(cm.tp, "caught", p.temp, true); }
-    if ($("cold-recall")) $("cold-recall").textContent = fmt(c.recall * 100, 0) + "%";
-    if ($("cold-precision")) $("cold-precision").textContent = fmt(c.precision * 100, 0) + "%";
+    if ($("cold-recall")) countUp($("cold-recall"), c.recall * 100, 0, "", "%");
+    if ($("cold-precision")) countUp($("cold-precision"), c.precision * 100, 0, "", "%");
     if ($("cold-recall-txt")) $("cold-recall-txt").textContent = `Of the genuinely cold days (below ${fmt(c.threshold_c, 1)} °C), the grid flagged this share.`;
     if ($("cold-precision-txt")) $("cold-precision-txt").textContent = `When the grid called a day cold, this share truly were.`;
   }
@@ -289,10 +294,60 @@
   function retheme() { instant = true; heroScope();
     rendered.forEach((id) => { try { SECTION_RENDER[id](); } catch (e) { console.error(id, e); } }); instant = false; }
 
+  /* ---------- interactive extras ---------- */
+  // animate a number counting up to its target (respects reduced-motion)
+  function countUp(el, target, decimals, prefix, suffix) {
+    prefix = prefix || ""; suffix = suffix || "";
+    const done = () => { el.textContent = prefix + Number(target).toFixed(decimals) + suffix; };
+    if (reduce || instant || !isFinite(target)) return done();
+    const dur = 900, t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+    const tick = (now) => { const p = Math.min(((now || Date.now()) - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + (target * e).toFixed(decimals) + suffix;
+      if (p < 1) requestAnimationFrame(tick); else done(); };
+    requestAnimationFrame(tick);
+  }
+  // status-bar grid frequency, gently wandering around 50 Hz like the real thing
+  function liveFrequency() {
+    const el = document.querySelector(".statusbar .live"); if (!el) return;
+    if (reduce) { el.textContent = "50.00 Hz"; return; }
+    let f = 50.0;
+    setInterval(() => { f += (Math.random() - 0.5) * 0.03 + (50 - f) * 0.1;
+      f = Math.max(49.95, Math.min(50.05, f)); el.textContent = f.toFixed(2) + " Hz"; }, 1500);
+  }
+  // thin progress bar tracking scroll position
+  function scrollProgress() {
+    const bar = $("scroll-progress"); if (!bar) return;
+    const upd = () => { const h = document.documentElement, max = h.scrollHeight - h.clientHeight;
+      bar.style.width = (max > 0 ? (h.scrollTop || document.body.scrollTop) / max * 100 : 0) + "%"; };
+    window.addEventListener("scroll", upd, { passive: true }); upd();
+  }
+  // right-edge module navigator: click to jump, highlights the section you're in
+  function buildNav() {
+    const ids = ["s1", "s2", "s3", "s4", "s5", "s6", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Experiment", "Inference", "Cold snap", "Failures", "Conclusion"];
+    if (!ids.some((id) => $(id))) return;
+    const nav = document.createElement("nav"); nav.id = "modnav";
+    ids.forEach((id, i) => { const s = $(id); if (!s) return;
+      const a = document.createElement("a"); a.href = "#" + id; a.className = "dot"; a.dataset.id = id;
+      a.setAttribute("aria-label", labels[i]);
+      a.innerHTML = `<span class="dot-label">${String(i + 1).padStart(2, "0")} · ${labels[i]}</span>`;
+      a.addEventListener("click", (e) => { e.preventDefault();
+        s.scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
+      nav.appendChild(a); });
+    document.body.appendChild(nav);
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((ents) => { ents.forEach((e) => { if (e.isIntersecting)
+        nav.querySelectorAll(".dot").forEach((d) => d.classList.toggle("active", d.dataset.id === e.target.id)); }); },
+        { rootMargin: "-45% 0px -45% 0px" });
+      ids.forEach((id) => { const s = $(id); if (s) io.observe(s); });
+    }
+  }
+
   function init() {
     if (started) return; started = true;
     let t; try { t = localStorage.getItem("gw-theme"); } catch (e) {}
-    if (!t) t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    if (t !== "light" && t !== "dark") t = "dark"; // dark by default; a saved choice still wins
     applyTheme(t);
     const btn = $("theme-toggle");
     if (btn) btn.addEventListener("click", () => { applyTheme(themeName() === "light" ? "dark" : "light"); retheme(); });
@@ -301,6 +356,9 @@
       console.warn("GRID_DATA not found — run `python -m src.build_site`."); }
     heroScope();
     markReveals();
+    liveFrequency();
+    scrollProgress();
+    buildNav();
 
     if (!("IntersectionObserver" in window)) {
       document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in-view"));
