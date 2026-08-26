@@ -78,6 +78,8 @@
     <div class="chlegend"></div>
     <div id="chart-ww" class="plot"></div></div>
     <p class="cap">FIG.02 — weekday vs weekend demand across the day.</p></div>
+  <div class="panel"><div class="panel-screen"><div id="chart-heatmap" class="plot"></div></div>
+    <p class="cap">MAP — mean demand by hour × month (MW). Winter evenings glow; summer nights fall dark.</p></div>
 </section>
 
 <!-- telemetry: TV pickup -->
@@ -126,9 +128,26 @@
     decline for a change of season — which is exactly why the long-term trend is measured and removed.</p>
 </div></div>
 
-<!-- 03 -->
+<!-- 03 TEMPERATURE RESPONSE (new) -->
+<section class="section" id="s2b">
+  <div class="wrap"><p class="modtag mono">MODULE 03 // TEMPERATURE RESPONSE</p>
+    <h2>The shape of the relationship</h2></div>
+  <p class="body">Before hiding the thermometer, it's worth seeing the relationship the whole project
+    exploits. Plot each day's average demand against its average temperature and a clear signature
+    appears: demand climbs steeply as it gets colder, then flattens once the weather turns mild.
+    Britain heats with electricity but rarely cools with it — so the curve has a <em>kink</em>, not a
+    symmetric V. The fitted breakpoint is where heating demand switches on.</p>
+  <div class="panel"><div class="panel-screen">
+    <div class="chlegend"><span style="color:var(--ink-d)">▮ daily observations</span> <span style="color:var(--amber)">▮ fitted response</span></div>
+    <div id="chart-response" class="plot"></div></div>
+    <p class="cap">Daily demand vs daily mean temperature, with a fitted heating/cooling breakpoint.</p></div>
+  <div class="stat-row" id="response-stats"></div>
+  <p class="body" id="response-verdict"></p>
+</section>
+
+<!-- 04 -->
 <section class="section" id="s3">
-  <div class="wrap"><p class="modtag mono">MODULE 03 // EXPERIMENT DESIGN</p>
+  <div class="wrap"><p class="modtag mono">MODULE 04 // EXPERIMENT DESIGN</p>
     <h2>Hide the thermometer</h2></div>
   <p class="body">Here is the rule that makes this an experiment rather than a correlation plot: the
     model never sees the temperature. It is trained to infer daily temperature from electricity
@@ -150,7 +169,7 @@
 
 <!-- 04 -->
 <section class="section" id="s4">
-  <div class="wrap"><p class="modtag mono">MODULE 04 // INFERENCE</p>
+  <div class="wrap"><p class="modtag mono">MODULE 05 // INFERENCE</p>
     <h2>Can the grid predict temperature?</h2></div>
   <p class="body">Tested on years the model never trained on, here is how close the grid's guess comes
     to the real thermometer. Switch what the model is allowed to see:</p>
@@ -171,7 +190,7 @@
 
 <!-- 05 -->
 <section class="section" id="s5">
-  <div class="wrap"><p class="modtag mono">MODULE 05 // COLD-SPELL DETECTION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 06 // COLD-SPELL DETECTION</p>
     <h2>Can the grid detect a cold snap?</h2></div>
   <p class="body">Forget exact degrees for a moment. Can the grid simply tell that a day is unusually
     cold? Framed as a yes/no test on the coldest days, the result looks like this.</p>
@@ -199,7 +218,7 @@
 
 <!-- 06 -->
 <section class="section" id="s6">
-  <div class="wrap"><p class="modtag mono">MODULE 06 // FAILURE ANALYSIS</p>
+  <div class="wrap"><p class="modtag mono">MODULE 07 // FAILURE ANALYSIS</p>
     <h2>When the grid lies</h2></div>
   <p class="body">The model's biggest mistakes are the most revealing part of the study. On these days
     electricity behaviour broke its own rules — and the usual culprits are not weather at all, but the
@@ -215,7 +234,7 @@
 
 <!-- 07 -->
 <section class="section" id="s7">
-  <div class="wrap"><p class="modtag mono">MODULE 07 // CONCLUSION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 08 // CONCLUSION</p>
     <h2>What did we actually learn?</h2>
     <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature signal —
       as a supplement to the calendar, not a replacement for it.</p>

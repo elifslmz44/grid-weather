@@ -161,6 +161,44 @@
         hovertemplate: "weekend · %{x}:00 · %{y:,.0f} MW<extra></extra>" },
     ], { xaxis: AXS({ title: "hour of day (local)", dtick: 3 }), yaxis: AX({ title: "mean demand (MW)" }) });
     else hide($("chart-ww"));
+    renderHeatmap();
+  }
+
+  function renderHeatmap() { const p = P(), h = D.hour_month_heatmap; if (!h) { hide($("chart-heatmap")); return; }
+    const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const months = h.months.map((mo) => M[(mo - 1) % 12] || mo);
+    plot("chart-heatmap", [{ type: "heatmap", z: h.z_mw, x: months, y: h.hours,
+      colorscale: [[0, p.panel], [1, p.amber]],
+      colorbar: { tickfont: { family: MONO, color: p.soft, size: 10 }, outlinecolor: p.line, thickness: 10 },
+      hovertemplate: "%{x} · %{y}:00 · %{z:,.0f} MW<extra></extra>" }],
+      { xaxis: AX({}), yaxis: AX({ title: "hour of day", dtick: 3 }), margin: { l: 56, r: 20, t: 16, b: 40 } });
+  }
+
+  function responseCurve() { const p = P(), r = D.temperature_response; if (!r) { hide($("chart-response")); return; }
+    plot("chart-response", [
+      { x: r.scatter_temp_c, y: r.scatter_demand_mw, mode: "markers",
+        marker: { color: p.soft, size: 4, opacity: 0.35 }, name: "days",
+        hovertemplate: "%{x:.1f} °C · %{y:,.0f} MW<extra></extra>" },
+      { x: r.fit_temp_c, y: r.fit_demand_mw, mode: "lines", line: { color: p.amber, width: 3 }, name: "fit",
+        hovertemplate: "%{x:.1f} °C · %{y:,.0f} MW<extra>fitted</extra>" },
+    ], { xaxis: AX({ title: "daily mean temperature (°C)" }), yaxis: AX({ title: "daily mean demand (MW)" }),
+         shapes: [{ type: "line", x0: r.knot_temp_c, x1: r.knot_temp_c, yref: "paper", y0: 0, y1: 1,
+                    line: { color: p.temp, width: 1, dash: "dot" } }],
+         annotations: [{ x: r.knot_temp_c, y: 1.03, yref: "paper", text: "breakpoint " + r.knot_temp_c + "°C",
+                    showarrow: false, font: { color: p.temp, size: 11, family: MONO } }] });
+    const row = $("response-stats");
+    if (row) { const mwCold = Math.abs(r.mw_per_degree_colder);
+      row.innerHTML = [["", r.knot_temp_c, 0, "°C", "balance point"],
+        ["", mwCold, 0, "MW", "per °C colder"], ["", r.asymmetry_ratio, 1, "×", "heating vs cooling"]]
+        .map(([pre, val, dec, u, l]) => `<div class="stat reveal"><span class="v" data-t="${val}" data-d="${dec}" data-p="${pre}">${pre}0</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
+      row.querySelectorAll(".v").forEach((el) => countUp(el, +el.dataset.t, +el.dataset.d, el.dataset.p, ""));
+      revealNew(row); }
+    const v = $("response-verdict");
+    if (v) { const mwCold = Math.abs(r.mw_per_degree_colder);
+      v.innerHTML = `Below about <strong>${r.knot_temp_c} °C</strong>, each degree colder adds roughly
+        <strong>${mwCold.toLocaleString()} MW</strong> of demand — around <strong>${r.asymmetry_ratio}×</strong>
+        the grid's response to the same rise in heat. That asymmetry is exactly why the reconstruction
+        reads cold snaps far more sharply than warm spells.`; }
   }
 
   /* ---------- 02 ---------- */
@@ -187,19 +225,35 @@
   /* ---------- 04 ---------- */
   function prediction() { const p = P(), m = D.metrics, pr = D.predictions;
     if (m && m.metrics && m.metrics.rf_B) {
-      const b = m.metrics.rf_B, row = $("stat-row");
-      if (row) { row.innerHTML = [["±", b.mae, 2, "°C", "mean error"], ["", b.rmse, 2, "°C", "RMSE"],
-        ["", b.r2, 2, "R²", "variance explained"]]
-        .map(([pre, val, dec, u, l]) => `<div class="stat reveal"><span class="v" data-t="${val}" data-d="${dec}" data-p="${pre}">${pre}0</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
+      const row = $("stat-row"), v = $("s4-verdict"), clim = m.metrics.climatology;
+      const verdicts = {
+        climatology: (b) => `Using only the calendar date — the average temperature for that day of the year —
+          the error is <strong>±${fmt(b.mae, 2)} °C</strong>. This is the baseline every model must beat.`,
+        rf_A: (b) => `From electricity behaviour <em>alone</em>, with no calendar at all, the grid infers
+          temperature to <strong>±${fmt(b.mae, 2)} °C</strong>${clim ? ` — actually worse than the ±${fmt(clim.mae, 2)} °C
+          you get from the date, because the seasonal cycle dominates` : ""}.`,
+        rf_B: (b) => `Electricity behaviour <em>plus</em> the calendar reaches <strong>±${fmt(b.mae, 2)} °C</strong>${clim ?
+          ` — about <strong>${(((clim.mae - b.mae) / clim.mae) * 100).toFixed(0)}% less error</strong> than the date alone` : ""}.
+          So the grid carries real temperature information beyond the season.`,
+      };
+      const showModel = (key) => { const b = m.metrics[key]; if (!b || !row) return;
+        row.innerHTML = [["±", b.mae, 2, "°C", "mean error"], ["", b.rmse, 2, "°C", "RMSE"],
+          ["", b.r2, 2, "R²", "variance explained"]]
+          .map(([pre, val, dec, u, l]) => `<div class="stat reveal"><span class="v" data-t="${val}" data-d="${dec}" data-p="${pre}">${pre}0</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
         row.querySelectorAll(".v").forEach((el) => countUp(el, +el.dataset.t, +el.dataset.d, el.dataset.p, ""));
-        revealNew(row); }
-      const clim = m.metrics.climatology, v = $("s4-verdict");
-      if (v && clim) { const impr = ((clim.mae - b.mae) / clim.mae) * 100;
-        v.innerHTML = `Knowing only the calendar date gives ±${fmt(clim.mae, 2)} °C. Adding electricity
-          behaviour cuts that to <strong>±${fmt(b.mae, 2)} °C</strong> — about
-          <strong>${impr.toFixed(0)}% less error</strong>. The grid genuinely carries temperature
-          information beyond the season, though demand alone (no calendar) stays a weaker guide than
-          the date itself.`; }
+        revealNew(row);
+        if (v && verdicts[key]) v.innerHTML = verdicts[key](b);
+        const tog = $("model-toggle");
+        if (tog) tog.querySelectorAll("button").forEach((btn) => btn.classList.toggle("on", btn.dataset.key === key));
+      };
+      // build the toggle (only for models that exist in the data)
+      const opts = [["climatology", "calendar only"], ["rf_A", "electricity only"], ["rf_B", "electricity + calendar"]]
+        .filter(([k]) => m.metrics[k]);
+      const tog = $("model-toggle");
+      if (tog && opts.length > 1) { tog.innerHTML = opts.map(([k, lbl]) =>
+        `<button type="button" data-key="${k}">${lbl}</button>`).join("");
+        tog.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => showModel(btn.dataset.key))); }
+      showModel("rf_B");
     }
     if (pr && pr.date && pr.rf_B) {
       plotScrub("chart-ts", [
@@ -207,7 +261,14 @@
           hovertemplate: "observed · %{x|%d %b %Y} · %{y:.1f} °C<extra></extra>" },
         { x: pr.date, y: pr.rf_B, color: p.amber, width: 1.4, name: "inferred",
           hovertemplate: "inferred · %{x|%d %b %Y} · %{y:.1f} °C<extra></extra>" },
-      ], { xaxis: AXS({ type: "date" }), yaxis: AXS({ title: "daily mean temp (°C)" }) });
+      ], { xaxis: AXS({ type: "date", rangeselector: {
+             buttons: [{ count: 3, label: "3M", step: "month", stepmode: "backward" },
+                       { count: 6, label: "6M", step: "month", stepmode: "backward" },
+                       { count: 1, label: "1Y", step: "year", stepmode: "backward" },
+                       { step: "all", label: "All" }],
+             bgcolor: p.panel, activecolor: p.amber, bordercolor: p.line, borderwidth: 1,
+             font: { family: MONO, color: p.ink, size: 11 }, x: 0, y: 1.12 } }),
+           yaxis: AXS({ title: "daily mean temp (°C)" }) });
       const lim = [Math.min(...pr.actual, ...pr.rf_B), Math.max(...pr.actual, ...pr.rf_B)];
       plot("chart-scatter", [
         { x: pr.actual, y: pr.rf_B, mode: "markers", marker: { color: p.temp, size: 5, opacity: 0.4 },
@@ -276,7 +337,7 @@
   }
 
   /* ---------- reveals, lazy render, theme ---------- */
-  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s3: features, s4: prediction, s5: coldSpell, s6: gridLies, s7: conclusion };
+  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s5: coldSpell, s6: gridLies, s7: conclusion };
   const rendered = new Set();
   let revealObserver = null;
 
@@ -324,8 +385,8 @@
   }
   // right-edge module navigator: click to jump, highlights the section you're in
   function buildNav() {
-    const ids = ["s1", "s2", "s3", "s4", "s5", "s6", "s7"];
-    const labels = ["Heartbeat", "Frequencies", "Experiment", "Inference", "Cold snap", "Failures", "Conclusion"];
+    const ids = ["s1", "s2", "s2b", "s3", "s4", "s5", "s6", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Cold snap", "Failures", "Conclusion"];
     if (!ids.some((id) => $(id))) return;
     const nav = document.createElement("nav"); nav.id = "modnav";
     ids.forEach((id, i) => { const s = $(id); if (!s) return;
@@ -344,6 +405,12 @@
     }
   }
 
+  function trendCard() { const t = D.annual_and_trend, card = $("trend-card"), el = $("trend-pct");
+    if (!card || !el || !t || t.trend_pct_per_year == null) return;
+    el.textContent = Math.abs(t.trend_pct_per_year).toFixed(1) + "%/yr";
+    card.style.display = "";
+  }
+
   function init() {
     if (started) return; started = true;
     let t; try { t = localStorage.getItem("gw-theme"); } catch (e) {}
@@ -359,6 +426,7 @@
     liveFrequency();
     scrollProgress();
     buildNav();
+    trendCard();
 
     if (!("IntersectionObserver" in window)) {
       document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in-view"));

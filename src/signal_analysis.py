@@ -411,6 +411,59 @@ def morning_ramp(demand: pd.DataFrame) -> dict:
 # --------------------------------------------------------------------------------------
 # Orchestrate
 # --------------------------------------------------------------------------------------
+def temperature_response(daily: pd.DataFrame) -> dict:
+    """Daily demand as a function of daily mean temperature: the classic energy 'response
+    curve'. Fits a continuous two-segment (piecewise-linear) model with a searched breakpoint,
+    which also quantifies the heating-vs-cooling asymmetry."""
+    d = daily.dropna(subset=["temp_mean_c", "nd_mean"]).copy()
+    t = d["temp_mean_c"].to_numpy(float)
+    y = d["nd_mean"].to_numpy(float)
+    lo, hi = float(np.floor(t.min())), float(np.ceil(t.max()))
+
+    # 1 degC binned means (only bins with enough support)
+    bins = np.arange(lo, hi + 1, 1.0)
+    idx = np.digitize(t, bins)
+    centers, means, counts = [], [], []
+    for b in range(1, len(bins)):
+        m = idx == b
+        if m.sum() >= 5:
+            centers.append(round(float((bins[b - 1] + bins[b]) / 2), 1))
+            means.append(round(float(y[m].mean()), 0))
+            counts.append(int(m.sum()))
+
+    # continuous piecewise-linear fit; search the knot that minimises SSE
+    best = None
+    for c in np.arange(lo + 2, hi - 2, 0.5):
+        X = np.column_stack([np.ones_like(t), t, np.maximum(0.0, t - c)])
+        coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+        resid = y - X @ coef
+        sse = float(resid @ resid)
+        if best is None or sse < best[0]:
+            best = (sse, float(c), coef)
+    _, knot, coef = best
+    heating_slope = float(coef[1])              # MW per +1 degC below the knot (negative)
+    cooling_slope = float(coef[1] + coef[2])    # MW per +1 degC above the knot (~0 in GB)
+    fit_x = np.array([lo, knot, hi])
+    fit_y = np.column_stack([np.ones(3), fit_x, np.maximum(0.0, fit_x - knot)]) @ coef
+
+    # subsample the scatter so the site payload stays light
+    step = max(1, len(t) // 500)
+    result = {
+        "scatter_temp_c": [round(float(x), 1) for x in t[::step]],
+        "scatter_demand_mw": [round(float(v), 0) for v in y[::step]],
+        "bin_temp_c": centers, "bin_demand_mw": means, "bin_count": counts,
+        "knot_temp_c": round(knot, 1),
+        "heating_slope_mw_per_c": round(heating_slope, 0),
+        "cooling_slope_mw_per_c": round(cooling_slope, 0),
+        "mw_per_degree_colder": round(-heating_slope, 0),
+        "asymmetry_ratio": round(abs(heating_slope) / max(abs(cooling_slope), 1e-6), 1),
+        "fit_temp_c": [round(float(x), 1) for x in fit_x],
+        "fit_demand_mw": [round(float(v), 0) for v in fit_y],
+    }
+    _save_json("temperature_response.json", result)
+    return result
+
+
 def run_all() -> None:
     _setup_mpl()
     demand, daily = load_processed()
@@ -423,6 +476,7 @@ def run_all() -> None:
     fft = fourier_spectrum(demand)
     acf = autocorrelation(demand)
     ramp = morning_ramp(demand)
+    resp = temperature_response(daily)
 
     print("\n=== Phase 4 key findings (report these back) ===")
     print(f"Peak demand hour (local)      : {hod['peak_hour_local']:.1f}h "

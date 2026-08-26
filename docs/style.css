@@ -238,6 +238,14 @@ footer .foot-title{ font-family:"VT323",monospace; font-size:1.6rem; color:var(-
 footer .muted{ color:var(--ink-d); max-width:46em; }
 footer a{ color:var(--cyan); }
 
+/* ---------- segmented feature toggle ---------- */
+.seg{ max-width:var(--tmax); margin:0 auto 20px; padding:0 24px; display:flex; flex-wrap:wrap; gap:8px; }
+.seg button{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em;
+  color:var(--ink-d); background:var(--screen); border:1px solid var(--line); border-radius:5px;
+  padding:8px 14px; cursor:pointer; transition:color .18s, border-color .18s, background .18s; }
+.seg button:hover{ color:var(--amber); border-color:var(--amber-d); }
+.seg button.on{ color:var(--bg); background:var(--amber); border-color:var(--amber); }
+
 /* ---------- scroll progress bar ---------- */
 #scroll-progress{ position:fixed; top:0; left:0; height:2px; width:0;
   background:var(--amber); z-index:60; box-shadow:0 0 8px var(--amber);
