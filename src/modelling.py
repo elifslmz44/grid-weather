@@ -101,6 +101,32 @@ def _get_importances(fitted, feats):
     return [{"feature": f, "importance": round(float(v), 4)} for f, v in ranked]
 
 
+def walk_forward_cv(df, feats, target, test_start_year, min_train_years=3):
+    """Expanding-window time-series CV: for each year, train on all prior years and test on that
+    year. Proves the result isn't an artefact of one split, and yields out-of-fold residuals used
+    to calibrate prediction intervals. Uses the rf_B configuration (electricity + calendar)."""
+    years = sorted(int(y) for y in df["date"].dt.year.unique())
+    folds, resid = [], {}
+    for i, y in enumerate(years):
+        if i < min_train_years:
+            continue
+        tr = df[df["date"].dt.year < y]
+        te = df[df["date"].dt.year == y]
+        if len(te) < 30:
+            continue
+        model = RandomForestRegressor(n_estimators=300, min_samples_leaf=3,
+                                      n_jobs=-1, random_state=42)
+        preds, _ = _fit_predict(model, tr, te, feats, target)
+        yt = te[target].to_numpy()
+        m = _metrics(yt, preds)
+        folds.append({"year": y, "mae": round(m["mae"], 3), "rmse": round(m["rmse"], 3),
+                      "r2": round(m["r2"], 3), "n": m["n"],
+                      "climatology_mae": round(float(mean_absolute_error(
+                          yt, climatology_baseline(tr, te, target))), 3)})
+        resid[y] = yt - preds
+    return folds, resid
+
+
 def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     df, FEATURES_A, FEATURES_B, TARGET = build_feature_table()
     train, test = chronological_split(df, test_start_year)
@@ -136,10 +162,36 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
         if imp is not None:
             importances[name] = imp
 
+    # --- walk-forward cross-validation + prediction intervals (rf_B) ---
+    folds, resid = walk_forward_cv(df, FEATURES_B, TARGET, test_start_year)
+    maes = [f["mae"] for f in folds]
+    # calibrate a 90% interval half-width on out-of-fold residuals from *pre-holdout* years,
+    # then measure the coverage actually achieved on the untouched holdout (honest check).
+    pre = [resid[y] for y in resid if y < test_start_year]
+    calib = np.concatenate(pre) if pre else (np.concatenate(list(resid.values())) if resid else np.array([0.0]))
+    target_cov = 0.90
+    q = float(np.quantile(np.abs(calib), target_cov)) if calib.size else 0.0
+    rfb = np.array(predictions["rf_B"], dtype=float)
+    predictions["rf_B_lower"] = [round(float(v - q), 2) for v in rfb]
+    predictions["rf_B_upper"] = [round(float(v + q), 2) for v in rfb]
+    holdout_cov = float(np.mean(np.abs(y_test - rfb) <= q)) if len(y_test) else 0.0
+    cv_payload = {
+        "folds": folds,
+        "mae_mean": round(float(np.mean(maes)), 3) if maes else None,
+        "mae_std": round(float(np.std(maes)), 3) if maes else None,
+        "mae_min": round(float(np.min(maes)), 3) if maes else None,
+        "mae_max": round(float(np.max(maes)), 3) if maes else None,
+        "n_folds": len(folds),
+        "target_coverage": target_cov,
+        "interval_half_width_c": round(q, 2),
+        "holdout_coverage": round(holdout_cov, 3),
+    }
+
     # --- persist ---
     config.MODEL_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     web = config.OUTPUTS_DIR / "web_data"
     web.mkdir(parents=True, exist_ok=True)
+    (web / "cv.json").write_text(json.dumps(cv_payload, indent=2))
 
     payload = {
         "test_start_year": test_start_year,

@@ -188,9 +188,33 @@
   </div>
 </section>
 
-<!-- 05 -->
+<!-- 06 VALIDATION & UNCERTAINTY (new) -->
+<section class="section" id="s4b">
+  <div class="wrap"><p class="modtag mono">MODULE 06 // VALIDATION &amp; UNCERTAINTY</p>
+    <h2>Does it hold up, and how sure is it?</h2></div>
+  <p class="body">A single train/test split can get lucky. So the model is re-tested with
+    <strong>walk-forward validation</strong>: train on every year up to some point, predict the next
+    year it has never seen, then step forward and repeat. If the error stays low and steady across all
+    those years, the result is real — not an artefact of one convenient split.</p>
+  <div class="stat-row" id="cv-stats"></div>
+  <div class="panel"><div class="panel-screen">
+    <div class="chlegend"><span style="color:var(--amber)">▮ grid model</span> <span style="color:var(--ink-d)">▮ calendar baseline</span></div>
+    <div id="chart-cv" class="plot"></div></div>
+    <p class="cap">Error on each year the model never trained on (walk-forward). Lower is better.</p></div>
+  <p class="body" id="cv-verdict"></p>
+  <p class="body">A responsible estimate also carries its uncertainty. Calibrating on the model's own
+    out-of-sample misses gives a <strong>prediction interval</strong> — a band the true temperature
+    should fall inside most of the time. Here it is around the inferred line, with the coverage it
+    actually achieved on the holdout stated honestly.</p>
+  <div class="panel"><div class="panel-screen">
+    <div class="chlegend"><span style="color:var(--temp)">▮ observed</span> <span style="color:var(--amber)">▮ inferred</span> <span style="color:var(--ink-d)">▮ 90% band</span></div>
+    <div id="chart-interval" class="plot"></div></div>
+    <p class="cap">Grid-inferred temperature with its 90% prediction interval (holdout years).</p></div>
+</section>
+
+<!-- 07 -->
 <section class="section" id="s5">
-  <div class="wrap"><p class="modtag mono">MODULE 06 // COLD-SPELL DETECTION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 07 // COLD-SPELL DETECTION</p>
     <h2>Can the grid detect a cold snap?</h2></div>
   <p class="body">Forget exact degrees for a moment. Can the grid simply tell that a day is unusually
     cold? Framed as a yes/no test on the coldest days, the result looks like this.</p>
@@ -218,7 +242,7 @@
 
 <!-- 06 -->
 <section class="section" id="s6">
-  <div class="wrap"><p class="modtag mono">MODULE 07 // FAILURE ANALYSIS</p>
+  <div class="wrap"><p class="modtag mono">MODULE 08 // FAILURE ANALYSIS</p>
     <h2>When the grid lies</h2></div>
   <p class="body">The model's biggest mistakes are the most revealing part of the study. On these days
     electricity behaviour broke its own rules — and the usual culprits are not weather at all, but the
@@ -234,7 +258,7 @@
 
 <!-- 07 -->
 <section class="section" id="s7">
-  <div class="wrap"><p class="modtag mono">MODULE 08 // CONCLUSION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 09 // CONCLUSION</p>
     <h2>What did we actually learn?</h2>
     <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature signal —
       as a supplement to the calendar, not a replacement for it.</p>

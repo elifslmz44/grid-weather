@@ -164,6 +164,49 @@
     renderHeatmap();
   }
 
+  function validation() { const p = P(), c = D.cv, pr = D.predictions;
+    // CV stat readouts
+    const row = $("cv-stats");
+    if (row && c && c.mae_mean != null) {
+      row.innerHTML = [["±", c.mae_mean, 2, "°C", "mean error across years"],
+        ["±", c.mae_std, 2, "°C", "year-to-year spread"], ["", c.n_folds, 0, "yrs", "tested walk-forward"]]
+        .map(([pre, val, dec, u, l]) => `<div class="stat reveal"><span class="v" data-t="${val}" data-d="${dec}" data-p="${pre}">${pre}0</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
+      row.querySelectorAll(".v").forEach((el) => countUp(el, +el.dataset.t, +el.dataset.d, el.dataset.p, ""));
+      revealNew(row);
+    }
+    // CV bars: model vs climatology per year
+    if (c && c.folds && c.folds.length) {
+      const yrs = c.folds.map((f) => f.year);
+      plotBars("chart-cv", [
+        { type: "bar", x: yrs, y: c.folds.map((f) => f.mae), name: "grid model", marker: { color: p.amber },
+          hovertemplate: "%{x}: ±%{y:.2f} °C<extra>grid</extra>" },
+        { type: "bar", x: yrs, y: c.folds.map((f) => f.climatology_mae), name: "calendar", marker: { color: p.line },
+          hovertemplate: "%{x}: ±%{y:.2f} °C<extra>calendar</extra>" },
+      ], { barmode: "group", xaxis: AX({ dtick: 1 }), yaxis: AX({ title: "mean abs error (°C)", rangemode: "tozero" }),
+           margin: { l: 60, r: 16, t: 10, b: 40 } });
+    } else hide($("chart-cv"));
+    // verdict
+    const v = $("cv-verdict");
+    if (v && c && c.mae_mean != null) v.innerHTML =
+      `Across <strong>${c.n_folds}</strong> unseen years the error holds at
+       <strong>±${fmt(c.mae_mean, 2)} °C</strong> (spread just ±${fmt(c.mae_std, 2)} °C) — steady, not a
+       one-off. The calibrated 90% band is <strong>±${fmt(c.interval_half_width_c, 2)} °C</strong>, and on
+       the holdout it actually contained <strong>${fmt(c.holdout_coverage * 100, 0)}%</strong> of days
+       (target 90% — reported as measured, not as hoped).`;
+    // interval band around inferred temperature
+    if (pr && pr.date && pr.rf_B_lower && pr.rf_B_upper) {
+      plot("chart-interval", [
+        { x: pr.date, y: pr.rf_B_upper, mode: "lines", line: { width: 0 }, hoverinfo: "skip", showlegend: false },
+        { x: pr.date, y: pr.rf_B_lower, mode: "lines", line: { width: 0 }, fill: "tonexty",
+          fillcolor: "rgba(164,144,106,0.22)", hoverinfo: "skip", showlegend: false },
+        { x: pr.date, y: pr.actual, mode: "lines", line: { color: p.temp, width: 1.2 }, name: "observed",
+          hovertemplate: "%{x|%d %b %Y}<br>observed %{y:.1f} °C<extra></extra>" },
+        { x: pr.date, y: pr.rf_B, mode: "lines", line: { color: p.amber, width: 1.2 }, name: "inferred",
+          hovertemplate: "%{x|%d %b %Y}<br>inferred %{y:.1f} °C<extra></extra>" },
+      ], { xaxis: AXS({ type: "date" }), yaxis: AXS({ title: "daily mean temp (°C)" }), hovermode: "x unified" });
+    } else hide($("chart-interval"));
+  }
+
   function renderHeatmap() { const p = P(), h = D.hour_month_heatmap; if (!h) { hide($("chart-heatmap")); return; }
     const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const months = h.months.map((mo) => M[(mo - 1) % 12] || mo);
@@ -337,7 +380,7 @@
   }
 
   /* ---------- reveals, lazy render, theme ---------- */
-  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s5: coldSpell, s6: gridLies, s7: conclusion };
+  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s5: coldSpell, s6: gridLies, s7: conclusion };
   const rendered = new Set();
   let revealObserver = null;
 
@@ -385,8 +428,8 @@
   }
   // right-edge module navigator: click to jump, highlights the section you're in
   function buildNav() {
-    const ids = ["s1", "s2", "s2b", "s3", "s4", "s5", "s6", "s7"];
-    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Cold snap", "Failures", "Conclusion"];
+    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s5", "s6", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Cold snap", "Failures", "Conclusion"];
     if (!ids.some((id) => $(id))) return;
     const nav = document.createElement("nav"); nav.id = "modnav";
     ids.forEach((id, i) => { const s = $(id); if (!s) return;
