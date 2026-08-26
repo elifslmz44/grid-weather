@@ -2,6 +2,10 @@
 
 *An experiment in extracting environmental signals from electricity demand — without showing the model the temperature.*
 
+[![Weekly data refresh](https://github.com/elifslmz44/grid-weather/actions/workflows/refresh.yml/badge.svg)](https://github.com/elifslmz44/grid-weather/actions/workflows/refresh.yml)
+
+**Live site:** https://elifslmz44.github.io/grid-weather/ · rebuilt automatically each week from the latest public data.
+
 > **Status:** work in progress. Results below are populated **only after** they are computed on
 > real data. No performance numbers are invented; any metric shown has been produced by the
 > evaluation pipeline in this repository.

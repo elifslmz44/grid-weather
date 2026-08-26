@@ -411,6 +411,11 @@
     card.style.display = "";
   }
 
+  function dataStamp() { const meta = D._meta, line = $("data-updated-line"), el = $("data-updated");
+    if (!meta || !meta.generated_utc || !line || !el) return;
+    el.textContent = meta.generated_utc; line.style.display = "";
+  }
+
   function init() {
     if (started) return; started = true;
     let t; try { t = localStorage.getItem("gw-theme"); } catch (e) {}
@@ -427,6 +432,7 @@
     scrollProgress();
     buildNav();
     trendCard();
+    dataStamp();
 
     if (!("IntersectionObserver" in window)) {
       document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in-view"));

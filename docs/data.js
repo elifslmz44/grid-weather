@@ -24928,5 +24928,8 @@ window.GRID_DATA = {
     "mean_weekday_minus_weekend_mw": 3516.0,
     "max_gap_mw": 7888.0,
     "max_gap_hour": 7.5
+  },
+  "_meta": {
+    "generated_utc": "2026-08-26"
   }
 };

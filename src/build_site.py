@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 
 from . import config
 
@@ -39,6 +40,7 @@ def build() -> None:
     if not bundle:
         log.warning("No outputs/web_data found — writing an empty bundle so the site still "
                     "builds and deploys. Run the analysis phases, then rebuild to populate charts.")
+    bundle["_meta"] = {"generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
 
     SITE_DIR.mkdir(exist_ok=True)
     out = SITE_DIR / "data.js"
