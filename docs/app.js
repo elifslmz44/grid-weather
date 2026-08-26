@@ -164,6 +164,41 @@
     renderHeatmap();
   }
 
+  function renderForecast() { const p = P(), f = D.forecast;
+    if (!f || !f.forecast) { const sec = $("s6b"); if (sec) sec.style.display = "none"; return; }
+    const b = f.backtest || {};
+    const row = $("forecast-stats");
+    if (row) {
+      row.innerHTML = [["±", b.mae_mw, 0, "MW", "backtest error"], ["", b.mape_pct, 1, "%", "mean error"],
+        ["", b.horizon_days, 0, "days", "forecast horizon"]]
+        .map(([pre, val, dec, u, l]) => `<div class="stat reveal"><span class="v" data-t="${val}" data-d="${dec}" data-p="${pre}">${pre}0</span> <span class="u">${u}</span><span class="l">${l}</span></div>`).join("");
+      row.querySelectorAll(".v").forEach((el) => countUp(el, +el.dataset.t, +el.dataset.d, el.dataset.p, ""));
+      revealNew(row);
+    }
+    const H = f.history || { date: [], demand_mw: [] }, F = f.forecast;
+    const split = F.date[0];
+    plot("chart-forecast", [
+      { x: F.date, y: F.upper_mw, mode: "lines", line: { width: 0 }, hoverinfo: "skip", showlegend: false },
+      { x: F.date, y: F.lower_mw, mode: "lines", line: { width: 0 }, fill: "tonexty",
+        fillcolor: "rgba(255,176,0,0.16)", hoverinfo: "skip", showlegend: false },
+      { x: H.date, y: H.demand_mw, mode: "lines", line: { color: p.soft, width: 1.4 }, name: "history",
+        hovertemplate: "%{x|%d %b %Y}<br>%{y:,.0f} MW<extra>actual</extra>" },
+      { x: F.date, y: F.demand_mw, mode: "lines", line: { color: p.amber, width: 2 }, name: "forecast",
+        hovertemplate: "%{x|%d %b %Y}<br>%{y:,.0f} MW<extra>forecast</extra>" },
+    ], { xaxis: AXS({ type: "date" }), yaxis: AXS({ title: "daily mean demand (MW)" }), hovermode: "x unified",
+         shapes: [{ type: "line", x0: split, x1: split, yref: "paper", y0: 0, y1: 1,
+                    line: { color: p.temp, width: 1, dash: "dot" } }],
+         annotations: [{ x: split, y: 1.03, yref: "paper", text: "forecast →", showarrow: false,
+                    font: { color: p.temp, size: 11, family: MONO }, xanchor: "left" }] });
+    const v = $("forecast-verdict");
+    if (v) v.innerHTML =
+      `Across an ${b.origins}-fold walk-forward backtest the model forecasts daily demand to within
+       <strong>±${(b.mae_mw || 0).toLocaleString()} MW</strong> on average (about ${fmt(b.mape_pct, 1)}%),
+       and its 90% band held <strong>${fmt((b.coverage || 0) * 100, 0)}%</strong> of the time. Good enough
+       to see the shape of the coming weeks — the weekly rhythm and the seasonal drift — with the honest
+       caveat below.`;
+  }
+
   function renderShap() { const p = P(), s = D.shap;
     if (!s || !s.global) { const sec = $("s4c"); if (sec) sec.style.display = "none"; return; }
     // global mean|SHAP| bar (top 10, ascending so largest sits on top)
@@ -416,7 +451,7 @@
   }
 
   /* ---------- reveals, lazy render, theme ---------- */
-  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s7: conclusion };
+  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s6b: renderForecast, s7: conclusion };
   const rendered = new Set();
   let revealObserver = null;
 
@@ -464,8 +499,8 @@
   }
   // right-edge module navigator: click to jump, highlights the section you're in
   function buildNav() {
-    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s7"];
-    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Conclusion"];
+    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s6b", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Forecast", "Conclusion"];
     if (!ids.some((id) => $(id))) return;
     const nav = document.createElement("nav"); nav.id = "modnav";
     ids.forEach((id, i) => { const s = $(id); if (!s) return;

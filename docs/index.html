@@ -273,9 +273,34 @@
     <p class="cap">FIG.07 — prediction error distribution through the year.</p></div>
 </section>
 
-<!-- 07 -->
+<!-- 10 DEMAND FORECAST (new) -->
+<section class="section" id="s6b">
+  <div class="wrap"><p class="modtag mono">MODULE 10 // DEMAND FORECAST</p>
+    <h2>Where is demand heading?</h2></div>
+  <p class="body">Everything so far looked <em>backwards</em> — reconstructing the past. This looks
+    forward: a transparent seasonal-trend model (long-term trend + annual cycle + working week +
+    holidays) forecasts national <strong>demand</strong> for the next two months. It's deliberately
+    interpretable, and the error band comes from an honest walk-forward backtest — how the model
+    actually did on days it hadn't seen, not in-sample optimism.</p>
+  <div class="stat-row" id="forecast-stats"></div>
+  <div class="panel"><div class="panel-screen">
+    <div class="chlegend"><span style="color:var(--ink-d)">▮ history</span> <span style="color:var(--amber)">▮ forecast</span> <span style="color:var(--ink-d)">▮ 90% band</span></div>
+    <div id="chart-forecast" class="plot"></div></div>
+    <p class="cap">Recent demand and the 60-day forecast with its backtested 90% interval.</p></div>
+  <p class="body" id="forecast-verdict"></p>
+  <div class="limits">
+    <h3 class="cyan">HONEST SCOPE</h3>
+    <ul>
+      <li>This forecasts <strong>demand, not weather</strong>. It reads the calendar — season, weekday, holidays, trend — but not an upcoming cold snap.</li>
+      <li>A production forecaster would feed in a numerical weather forecast; this is a strong, interpretable baseline, not that.</li>
+      <li>The band widens in reality during unusual weather; the stated coverage is the historical backtest average.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 11 -->
 <section class="section" id="s7">
-  <div class="wrap"><p class="modtag mono">MODULE 10 // CONCLUSION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 11 // CONCLUSION</p>
     <h2>What did we actually learn?</h2>
     <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature signal —
       as a supplement to the calendar, not a replacement for it.</p>
