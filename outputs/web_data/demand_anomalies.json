@@ -3,37 +3,37 @@
     {
       "date": "2024-02-05",
       "weekday": "Monday",
-      "expected_mw": 37371.0,
+      "expected_mw": 37387.0,
       "actual_mw": 28632.0,
-      "deviation_mw": -8739.0,
-      "observed_temp_c": 9.49,
+      "deviation_mw": -8755.0,
+      "observed_temp_c": 9.54,
       "context": "unknown"
     },
     {
       "date": "2023-01-06",
       "weekday": "Friday",
-      "expected_mw": 37023.0,
+      "expected_mw": 37033.0,
       "actual_mw": 28316.0,
-      "deviation_mw": -8707.0,
-      "observed_temp_c": 8.64,
+      "deviation_mw": -8717.0,
+      "observed_temp_c": 8.7,
       "context": "unknown"
     },
     {
       "date": "2024-01-26",
       "weekday": "Friday",
-      "expected_mw": 37149.0,
+      "expected_mw": 37147.0,
       "actual_mw": 28676.0,
-      "deviation_mw": -8473.0,
-      "observed_temp_c": 7.51,
+      "deviation_mw": -8471.0,
+      "observed_temp_c": 7.18,
       "context": "unknown"
     },
     {
       "date": "2024-02-06",
       "weekday": "Tuesday",
-      "expected_mw": 37651.0,
+      "expected_mw": 37639.0,
       "actual_mw": 29431.0,
-      "deviation_mw": -8220.0,
-      "observed_temp_c": 9.77,
+      "deviation_mw": -8208.0,
+      "observed_temp_c": 9.62,
       "context": "unknown"
     },
     {
@@ -42,25 +42,25 @@
       "expected_mw": 36089.0,
       "actual_mw": 27967.0,
       "deviation_mw": -8122.0,
-      "observed_temp_c": 11.12,
+      "observed_temp_c": 11.02,
       "context": "unknown"
     },
     {
       "date": "2023-01-07",
       "weekday": "Saturday",
-      "expected_mw": 33388.0,
+      "expected_mw": 33385.0,
       "actual_mw": 25281.0,
-      "deviation_mw": -8107.0,
-      "observed_temp_c": 9.79,
+      "deviation_mw": -8104.0,
+      "observed_temp_c": 9.64,
       "context": "weekend"
     },
     {
       "date": "2025-03-06",
       "weekday": "Thursday",
-      "expected_mw": 35639.0,
+      "expected_mw": 35640.0,
       "actual_mw": 27561.0,
-      "deviation_mw": -8078.0,
-      "observed_temp_c": 9.35,
+      "deviation_mw": -8079.0,
+      "observed_temp_c": 9.49,
       "context": "unknown"
     },
     {
@@ -69,7 +69,16 @@
       "expected_mw": 29610.0,
       "actual_mw": 21697.0,
       "deviation_mw": -7913.0,
-      "observed_temp_c": 10.09,
+      "observed_temp_c": 9.92,
+      "context": "unknown"
+    },
+    {
+      "date": "2025-03-05",
+      "weekday": "Wednesday",
+      "expected_mw": 35820.0,
+      "actual_mw": 28011.0,
+      "deviation_mw": -7809.0,
+      "observed_temp_c": 6.96,
       "context": "unknown"
     },
     {
@@ -78,34 +87,25 @@
       "expected_mw": 37196.0,
       "actual_mw": 29392.0,
       "deviation_mw": -7803.0,
-      "observed_temp_c": 9.95,
-      "context": "unknown"
-    },
-    {
-      "date": "2025-03-05",
-      "weekday": "Wednesday",
-      "expected_mw": 35808.0,
-      "actual_mw": 28011.0,
-      "deviation_mw": -7797.0,
-      "observed_temp_c": 6.87,
+      "observed_temp_c": 9.96,
       "context": "unknown"
     },
     {
       "date": "2024-04-12",
       "weekday": "Friday",
-      "expected_mw": 31399.0,
+      "expected_mw": 31402.0,
       "actual_mw": 23608.0,
-      "deviation_mw": -7791.0,
-      "observed_temp_c": 13.51,
+      "deviation_mw": -7795.0,
+      "observed_temp_c": 13.47,
       "context": "unknown"
     },
     {
       "date": "2023-01-13",
       "weekday": "Friday",
-      "expected_mw": 36973.0,
+      "expected_mw": 36974.0,
       "actual_mw": 29245.0,
-      "deviation_mw": -7728.0,
-      "observed_temp_c": 6.92,
+      "deviation_mw": -7729.0,
+      "observed_temp_c": 6.88,
       "context": "unknown"
     },
     {
@@ -114,25 +114,25 @@
       "expected_mw": 31729.0,
       "actual_mw": 24031.0,
       "deviation_mw": -7698.0,
-      "observed_temp_c": 9.8,
+      "observed_temp_c": 9.83,
       "context": "unknown"
     },
     {
       "date": "2024-02-04",
       "weekday": "Sunday",
-      "expected_mw": 32766.0,
+      "expected_mw": 32781.0,
       "actual_mw": 25246.0,
-      "deviation_mw": -7519.0,
-      "observed_temp_c": 10.44,
+      "deviation_mw": -7534.0,
+      "observed_temp_c": 10.46,
       "context": "weekend"
     },
     {
       "date": "2025-08-25",
       "weekday": "Monday",
-      "expected_mw": 26411.0,
+      "expected_mw": 26410.0,
       "actual_mw": 18957.0,
-      "deviation_mw": -7454.0,
-      "observed_temp_c": 20.65,
+      "deviation_mw": -7453.0,
+      "observed_temp_c": 20.74,
       "context": "unknown"
     }
   ],

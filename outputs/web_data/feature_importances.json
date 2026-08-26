@@ -2,187 +2,187 @@
   "linear_A": [
     {
       "feature": "nd_mean",
-      "importance": 7.4318
+      "importance": 7.3251
     },
     {
       "feature": "overnight_min_mw",
-      "importance": 6.7501
+      "importance": 6.5075
     },
     {
       "feature": "nd_std",
-      "importance": 2.6799
+      "importance": 2.5861
     },
     {
       "feature": "tsd_mean",
-      "importance": 1.6419
+      "importance": 1.6461
     },
     {
       "feature": "morning_ramp_max_mw",
-      "importance": 1.1957
+      "importance": 1.2031
     },
     {
       "feature": "nd_range",
-      "importance": 1.09
-    },
-    {
-      "feature": "nd_range_roll7",
-      "importance": 0.8871
+      "importance": 1.1642
     },
     {
       "feature": "nd_max",
-      "importance": 0.8278
+      "importance": 0.9325
+    },
+    {
+      "feature": "nd_range_roll7",
+      "importance": 0.831
     },
     {
       "feature": "nd_mean_lag1",
-      "importance": 0.6252
-    },
-    {
-      "feature": "nd_mean_roll7",
-      "importance": 0.2982
+      "importance": 0.601
     },
     {
       "feature": "nd_min",
-      "importance": 0.2744
+      "importance": 0.3962
+    },
+    {
+      "feature": "nd_mean_roll7",
+      "importance": 0.2696
     },
     {
       "feature": "nd_mean_lag7",
-      "importance": 0.1603
+      "importance": 0.1524
     },
     {
       "feature": "evening_peak_mw",
-      "importance": 0.02
+      "importance": 0.0973
     }
   ],
   "linear_B": [
     {
       "feature": "doy_cos",
-      "importance": 3.3289
+      "importance": 3.2223
     },
     {
       "feature": "overnight_min_mw",
-      "importance": 3.2726
+      "importance": 3.0039
     },
     {
       "feature": "doy_sin",
-      "importance": 1.5787
+      "importance": 1.5883
     },
     {
       "feature": "nd_std",
-      "importance": 1.004
-    },
-    {
-      "feature": "nd_mean_roll7",
-      "importance": 0.8018
+      "importance": 0.8864
     },
     {
       "feature": "nd_mean_lag7",
-      "importance": 0.8012
+      "importance": 0.8034
+    },
+    {
+      "feature": "nd_mean_roll7",
+      "importance": 0.7908
     },
     {
       "feature": "nd_range",
-      "importance": 0.5906
-    },
-    {
-      "feature": "nd_mean_lag1",
-      "importance": 0.5683
-    },
-    {
-      "feature": "nd_mean",
-      "importance": 0.5534
+      "importance": 0.671
     },
     {
       "feature": "nd_range_roll7",
-      "importance": 0.5334
-    },
-    {
-      "feature": "is_weekend",
-      "importance": 0.517
+      "importance": 0.5943
     },
     {
       "feature": "evening_peak_mw",
-      "importance": 0.508
+      "importance": 0.5849
+    },
+    {
+      "feature": "nd_mean_lag1",
+      "importance": 0.5567
+    },
+    {
+      "feature": "is_weekend",
+      "importance": 0.5217
     },
     {
       "feature": "nd_max",
-      "importance": 0.4126
+      "importance": 0.5201
+    },
+    {
+      "feature": "nd_mean",
+      "importance": 0.3936
     },
     {
       "feature": "is_holiday",
-      "importance": 0.2218
-    },
-    {
-      "feature": "month_sin",
-      "importance": 0.1573
-    },
-    {
-      "feature": "dow",
-      "importance": 0.1052
+      "importance": 0.224
     },
     {
       "feature": "nd_min",
-      "importance": 0.0723
+      "importance": 0.1913
+    },
+    {
+      "feature": "month_sin",
+      "importance": 0.1387
+    },
+    {
+      "feature": "dow",
+      "importance": 0.1214
     },
     {
       "feature": "daylight_hours",
-      "importance": 0.0686
-    },
-    {
-      "feature": "morning_ramp_max_mw",
-      "importance": 0.0476
+      "importance": 0.0525
     },
     {
       "feature": "tsd_mean",
-      "importance": 0.0464
+      "importance": 0.0485
+    },
+    {
+      "feature": "morning_ramp_max_mw",
+      "importance": 0.0423
     },
     {
       "feature": "month_cos",
-      "importance": 0.0237
+      "importance": 0.0179
     }
   ],
   "rf_A": [
     {
       "feature": "nd_mean_roll7",
-      "importance": 0.508
+      "importance": 0.5349
     },
     {
       "feature": "overnight_min_mw",
-      "importance": 0.2012
+      "importance": 0.1691
     },
     {
       "feature": "nd_range_roll7",
-      "importance": 0.0848
+      "importance": 0.0815
     },
     {
       "feature": "nd_min",
-      "importance": 0.0474
+      "importance": 0.0547
     },
     {
       "feature": "morning_ramp_max_mw",
-      "importance": 0.042
+      "importance": 0.0418
     },
     {
       "feature": "nd_mean_lag7",
-      "importance": 0.0199
+      "importance": 0.0202
     },
     {
       "feature": "tsd_mean",
-      "importance": 0.0179
+      "importance": 0.0183
     },
     {
       "feature": "nd_mean_lag1",
-      "importance": 0.0174
+      "importance": 0.0172
     },
     {
       "feature": "evening_peak_mw",
-      "importance": 0.0159
+      "importance": 0.016
     },
     {
       "feature": "nd_max",
-      "importance": 0.0135
+      "importance": 0.0139
     },
     {
       "feature": "nd_mean",
-      "importance": 0.0115
+      "importance": 0.0117
     },
     {
       "feature": "nd_std",
@@ -190,57 +190,57 @@
     },
     {
       "feature": "nd_range",
-      "importance": 0.0095
+      "importance": 0.0097
     }
   ],
   "rf_B": [
     {
       "feature": "nd_mean_roll7",
-      "importance": 0.4665
+      "importance": 0.4898
     },
     {
       "feature": "overnight_min_mw",
-      "importance": 0.1433
+      "importance": 0.1103
     },
     {
       "feature": "doy_cos",
-      "importance": 0.1026
+      "importance": 0.1017
     },
     {
       "feature": "doy_sin",
-      "importance": 0.0819
+      "importance": 0.0824
     },
     {
       "feature": "nd_min",
-      "importance": 0.0401
+      "importance": 0.0459
     },
     {
       "feature": "month_sin",
-      "importance": 0.0283
-    },
-    {
-      "feature": "nd_range_roll7",
-      "importance": 0.0272
+      "importance": 0.0294
     },
     {
       "feature": "daylight_hours",
-      "importance": 0.0258
+      "importance": 0.0278
+    },
+    {
+      "feature": "nd_range_roll7",
+      "importance": 0.0271
     },
     {
       "feature": "morning_ramp_max_mw",
-      "importance": 0.0162
+      "importance": 0.0161
     },
     {
       "feature": "nd_mean_lag7",
-      "importance": 0.0155
+      "importance": 0.0156
     },
     {
       "feature": "nd_mean_lag1",
-      "importance": 0.0103
+      "importance": 0.0104
     },
     {
       "feature": "nd_max",
-      "importance": 0.0075
+      "importance": 0.0077
     },
     {
       "feature": "tsd_mean",
@@ -248,7 +248,7 @@
     },
     {
       "feature": "evening_peak_mw",
-      "importance": 0.0065
+      "importance": 0.0068
     },
     {
       "feature": "nd_std",
@@ -256,11 +256,11 @@
     },
     {
       "feature": "nd_mean",
-      "importance": 0.0055
+      "importance": 0.0056
     },
     {
       "feature": "nd_range",
-      "importance": 0.0055
+      "importance": 0.0056
     },
     {
       "feature": "dow",
@@ -268,7 +268,7 @@
     },
     {
       "feature": "month_cos",
-      "importance": 0.0007
+      "importance": 0.001
     },
     {
       "feature": "is_holiday",
