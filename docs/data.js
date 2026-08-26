@@ -15885,7 +15885,7 @@ window.GRID_DATA = {
         "n": 1096
       },
       "rf_B": {
-        "mae": 1.7650381451637391,
+        "mae": 1.765038145163739,
         "rmse": 2.1941667991006466,
         "r2": 0.8221427457861408,
         "n": 1096
@@ -25930,6 +25930,217 @@ window.GRID_DATA = {
       10.14,
       9.17,
       8.68
+    ]
+  },
+  "shap": {
+    "base_value": 10.53,
+    "global": [
+      {
+        "feature": "nd_mean_roll7",
+        "mean_abs_shap": 1.9678
+      },
+      {
+        "feature": "doy_cos",
+        "mean_abs_shap": 1.3147
+      },
+      {
+        "feature": "doy_sin",
+        "mean_abs_shap": 0.9792
+      },
+      {
+        "feature": "overnight_min_mw",
+        "mean_abs_shap": 0.8249
+      },
+      {
+        "feature": "nd_range_roll7",
+        "mean_abs_shap": 0.567
+      },
+      {
+        "feature": "month_sin",
+        "mean_abs_shap": 0.3965
+      },
+      {
+        "feature": "daylight_hours",
+        "mean_abs_shap": 0.3679
+      },
+      {
+        "feature": "nd_min",
+        "mean_abs_shap": 0.319
+      },
+      {
+        "feature": "morning_ramp_max_mw",
+        "mean_abs_shap": 0.1628
+      },
+      {
+        "feature": "nd_mean_lag7",
+        "mean_abs_shap": 0.1614
+      },
+      {
+        "feature": "nd_max",
+        "mean_abs_shap": 0.0983
+      },
+      {
+        "feature": "evening_peak_mw",
+        "mean_abs_shap": 0.076
+      },
+      {
+        "feature": "nd_mean_lag1",
+        "mean_abs_shap": 0.0643
+      },
+      {
+        "feature": "nd_std",
+        "mean_abs_shap": 0.0502
+      },
+      {
+        "feature": "nd_range",
+        "mean_abs_shap": 0.0391
+      },
+      {
+        "feature": "tsd_mean",
+        "mean_abs_shap": 0.0378
+      },
+      {
+        "feature": "nd_mean",
+        "mean_abs_shap": 0.0339
+      },
+      {
+        "feature": "dow",
+        "mean_abs_shap": 0.0148
+      },
+      {
+        "feature": "month_cos",
+        "mean_abs_shap": 0.0082
+      },
+      {
+        "feature": "is_holiday",
+        "mean_abs_shap": 0.0043
+      },
+      {
+        "feature": "is_weekend",
+        "mean_abs_shap": 0.0019
+      }
+    ],
+    "examples": [
+      {
+        "label": "coldest",
+        "date": "2024-01-18",
+        "actual": -2.2,
+        "predicted": -0.4,
+        "contributions": [
+          {
+            "feature": "overnight_min_mw",
+            "shap": -3.166
+          },
+          {
+            "feature": "nd_mean_roll7",
+            "shap": -2.984
+          },
+          {
+            "feature": "doy_cos",
+            "shap": -1.397
+          },
+          {
+            "feature": "nd_min",
+            "shap": -1.206
+          },
+          {
+            "feature": "nd_range_roll7",
+            "shap": -1.101
+          },
+          {
+            "feature": "daylight_hours",
+            "shap": -0.448
+          },
+          {
+            "feature": "doy_sin",
+            "shap": -0.301
+          },
+          {
+            "feature": "month_sin",
+            "shap": -0.276
+          }
+        ]
+      },
+      {
+        "label": "typical",
+        "date": "2023-05-04",
+        "actual": 11.1,
+        "predicted": 11.6,
+        "contributions": [
+          {
+            "feature": "doy_sin",
+            "shap": -1.929
+          },
+          {
+            "feature": "nd_mean_roll7",
+            "shap": 1.539
+          },
+          {
+            "feature": "overnight_min_mw",
+            "shap": 1.04
+          },
+          {
+            "feature": "month_sin",
+            "shap": -0.898
+          },
+          {
+            "feature": "nd_min",
+            "shap": 0.42
+          },
+          {
+            "feature": "nd_max",
+            "shap": 0.248
+          },
+          {
+            "feature": "nd_range_roll7",
+            "shap": 0.24
+          },
+          {
+            "feature": "nd_mean_lag7",
+            "shap": 0.227
+          }
+        ]
+      },
+      {
+        "label": "warmest",
+        "date": "2025-07-11",
+        "actual": 24.0,
+        "predicted": 20.6,
+        "contributions": [
+          {
+            "feature": "nd_mean_roll7",
+            "shap": 3.089
+          },
+          {
+            "feature": "doy_cos",
+            "shap": 2.021
+          },
+          {
+            "feature": "nd_range_roll7",
+            "shap": 1.434
+          },
+          {
+            "feature": "overnight_min_mw",
+            "shap": 1.279
+          },
+          {
+            "feature": "doy_sin",
+            "shap": 1.095
+          },
+          {
+            "feature": "daylight_hours",
+            "shap": 0.409
+          },
+          {
+            "feature": "nd_min",
+            "shap": 0.349
+          },
+          {
+            "feature": "nd_max",
+            "shap": 0.101
+          }
+        ]
+      }
     ]
   },
   "temperature_response": {

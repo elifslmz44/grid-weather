@@ -164,6 +164,42 @@
     renderHeatmap();
   }
 
+  function renderShap() { const p = P(), s = D.shap;
+    if (!s || !s.global) { const sec = $("s4c"); if (sec) sec.style.display = "none"; return; }
+    // global mean|SHAP| bar (top 10, ascending so largest sits on top)
+    const top = s.global.slice(0, 10).slice().reverse();
+    plot("chart-shap-global", [{ type: "bar", orientation: "h",
+      x: top.map((g) => g.mean_abs_shap), y: top.map((g) => g.feature),
+      marker: { color: p.amber }, hovertemplate: "%{y}<br>%{x:.2f} °C avg impact<extra></extra>" }],
+      { xaxis: AX({ title: "mean |SHAP| (°C)", rangemode: "tozero" }), yaxis: AX({ automargin: true }),
+        margin: { l: 150, r: 16, t: 10, b: 42 } });
+
+    const ex = s.examples || [];
+    const drawExample = (e) => { if (!e) return;
+      const c = e.contributions.slice().sort((a, b) => a.shap - b.shap); // ascending for horizontal bars
+      plot("chart-shap-example", [{ type: "bar", orientation: "h",
+        x: c.map((k) => k.shap), y: c.map((k) => k.feature),
+        marker: { color: c.map((k) => k.shap >= 0 ? p.amber : p.temp) },
+        hovertemplate: "%{y}<br>%{x:+.2f} °C<extra></extra>" }],
+        { xaxis: AX({ title: "push on inferred temperature (°C)", zeroline: true, zerolinecolor: p.line }),
+          yaxis: AX({ automargin: true }), margin: { l: 150, r: 16, t: 10, b: 42 } });
+      const cap = $("shap-example-cap");
+      if (cap) cap.textContent = `${e.date}: from the ${fmt(s.base_value, 1)} °C all-days average → ${fmt(e.predicted, 1)} °C inferred (actual ${fmt(e.actual, 1)} °C). Amber pushes warmer, cyan colder.`;
+      const tog = $("shap-toggle");
+      if (tog) tog.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.date === e.date));
+    };
+    const tog = $("shap-toggle");
+    if (tog && ex.length) { tog.innerHTML = ex.map((e) =>
+      `<button type="button" data-date="${e.date}">${e.label}</button>`).join("");
+      tog.querySelectorAll("button").forEach((b, i) => b.addEventListener("click", () => drawExample(ex[i]))); }
+    const v = $("shap-verdict");
+    if (v && s.global.length) v.innerHTML =
+      `The model leans hardest on <strong>${s.global[0].feature.replace(/_/g, " ")}</strong> — sustained recent
+       demand — exactly the heating-load fingerprint you'd hope a weather-blind model would find, rather than
+       a spurious shortcut. Calendar terms fill in the seasonal backdrop, but behaviour does the real work.`;
+    drawExample(ex[0]);
+  }
+
   function validation() { const p = P(), c = D.cv, pr = D.predictions;
     // CV stat readouts
     const row = $("cv-stats");
@@ -380,7 +416,7 @@
   }
 
   /* ---------- reveals, lazy render, theme ---------- */
-  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s5: coldSpell, s6: gridLies, s7: conclusion };
+  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s7: conclusion };
   const rendered = new Set();
   let revealObserver = null;
 
@@ -428,8 +464,8 @@
   }
   // right-edge module navigator: click to jump, highlights the section you're in
   function buildNav() {
-    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s5", "s6", "s7"];
-    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Cold snap", "Failures", "Conclusion"];
+    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Conclusion"];
     if (!ids.some((id) => $(id))) return;
     const nav = document.createElement("nav"); nav.id = "modnav";
     ids.forEach((id, i) => { const s = $(id); if (!s) return;

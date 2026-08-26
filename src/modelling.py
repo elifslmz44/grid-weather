@@ -127,6 +127,42 @@ def walk_forward_cv(df, feats, target, test_start_year, min_train_years=3):
     return folds, resid
 
 
+def shap_explain(fitted, test, feats, target, dates):
+    """Optional SHAP explainability for the rf_B model. Guarded: if shap isn't installed the
+    pipeline simply skips it (the site hides the panel), so CI can never break on this."""
+    try:
+        import shap
+    except Exception as exc:  # pragma: no cover - optional dependency
+        log.warning("shap not available — skipping explainability export (%s)", exc)
+        return None
+    Xte = test[feats]
+    explainer = shap.TreeExplainer(fitted)
+    sv = np.asarray(explainer.shap_values(Xte), dtype=float)   # (n_days, n_feats)
+    base = float(np.mean(explainer.expected_value))
+    preds = fitted.predict(Xte)
+    yt = test[target].to_numpy()
+
+    mean_abs = np.abs(sv).mean(axis=0)
+    global_imp = sorted(zip(feats, mean_abs), key=lambda kv: kv[1], reverse=True)
+
+    # three illustrative days: coldest, median, warmest observed
+    order = np.argsort(yt)
+    picks = {"coldest": int(order[0]), "typical": int(order[len(order) // 2]), "warmest": int(order[-1])}
+    examples = []
+    for label, idx in picks.items():
+        contribs = sorted(zip(feats, sv[idx]), key=lambda kv: abs(kv[1]), reverse=True)[:8]
+        examples.append({
+            "label": label, "date": dates[idx],
+            "actual": round(float(yt[idx]), 1), "predicted": round(float(preds[idx]), 1),
+            "contributions": [{"feature": f, "shap": round(float(s), 3)} for f, s in contribs],
+        })
+    return {
+        "base_value": round(base, 2),
+        "global": [{"feature": f, "mean_abs_shap": round(float(v), 4)} for f, v in global_imp],
+        "examples": examples,
+    }
+
+
 def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     df, FEATURES_A, FEATURES_B, TARGET = build_feature_table()
     train, test = chronological_split(df, test_start_year)
@@ -154,10 +190,12 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
         ("rf_B", RandomForestRegressor(n_estimators=300, min_samples_leaf=3,
                                        n_jobs=-1, random_state=42), FEATURES_B),
     ]
+    fitted_models = {}
     for name, model, feats in specs:
         yhat, fitted = _fit_predict(model, train, test, feats, TARGET)
         results[name] = _metrics(y_test, yhat)
         predictions[name] = [round(float(v), 2) for v in yhat]
+        fitted_models[name] = fitted
         imp = _get_importances(fitted, feats)
         if imp is not None:
             importances[name] = imp
@@ -192,6 +230,12 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     web = config.OUTPUTS_DIR / "web_data"
     web.mkdir(parents=True, exist_ok=True)
     (web / "cv.json").write_text(json.dumps(cv_payload, indent=2))
+
+    # --- SHAP explainability (optional, guarded) ---
+    shap_payload = shap_explain(fitted_models.get("rf_B"), test, FEATURES_B, TARGET, predictions["date"]) \
+        if fitted_models.get("rf_B") is not None else None
+    if shap_payload is not None:
+        (web / "shap.json").write_text(json.dumps(shap_payload, indent=2))
 
     payload = {
         "test_start_year": test_start_year,

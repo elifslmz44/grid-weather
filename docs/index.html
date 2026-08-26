@@ -212,9 +212,26 @@
     <p class="cap">Grid-inferred temperature with its 90% prediction interval (holdout years).</p></div>
 </section>
 
-<!-- 07 -->
+<!-- 07 EXPLAINABILITY (new) -->
+<section class="section" id="s4c">
+  <div class="wrap"><p class="modtag mono">MODULE 07 // EXPLAINABILITY</p>
+    <h2>Why does it decide what it decides?</h2></div>
+  <p class="body">A model is only trustworthy if you can see its reasoning. <strong>SHAP</strong> values
+    open the box: they measure how much each signal pushed a given day's estimate up or down, in
+    degrees. Averaged over every test day, they reveal what the model leans on most.</p>
+  <div class="panel"><div class="panel-screen"><div id="chart-shap-global" class="plot"></div></div>
+    <p class="cap">Average impact of each input on the inferred temperature (mean |SHAP|, °C).</p></div>
+  <p class="body">And for any single day you can watch those forces play out — which signals argued for
+    "cold", which for "mild", starting from the all-days average. Pick a day:</p>
+  <div class="seg" id="shap-toggle" role="group" aria-label="Choose an example day"></div>
+  <div class="panel"><div class="panel-screen"><div id="chart-shap-example" class="plot"></div></div>
+    <p class="cap" id="shap-example-cap">Per-day contributions: amber pushes warmer, cyan pushes colder.</p></div>
+  <p class="body" id="shap-verdict"></p>
+</section>
+
+<!-- 08 -->
 <section class="section" id="s5">
-  <div class="wrap"><p class="modtag mono">MODULE 07 // COLD-SPELL DETECTION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 08 // COLD-SPELL DETECTION</p>
     <h2>Can the grid detect a cold snap?</h2></div>
   <p class="body">Forget exact degrees for a moment. Can the grid simply tell that a day is unusually
     cold? Framed as a yes/no test on the coldest days, the result looks like this.</p>
@@ -242,7 +259,7 @@
 
 <!-- 06 -->
 <section class="section" id="s6">
-  <div class="wrap"><p class="modtag mono">MODULE 08 // FAILURE ANALYSIS</p>
+  <div class="wrap"><p class="modtag mono">MODULE 09 // FAILURE ANALYSIS</p>
     <h2>When the grid lies</h2></div>
   <p class="body">The model's biggest mistakes are the most revealing part of the study. On these days
     electricity behaviour broke its own rules — and the usual culprits are not weather at all, but the
@@ -258,7 +275,7 @@
 
 <!-- 07 -->
 <section class="section" id="s7">
-  <div class="wrap"><p class="modtag mono">MODULE 09 // CONCLUSION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 10 // CONCLUSION</p>
     <h2>What did we actually learn?</h2>
     <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature signal —
       as a supplement to the calendar, not a replacement for it.</p>
