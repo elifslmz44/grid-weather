@@ -247,6 +247,16 @@ footer a{ color:var(--cyan); }
 .dq .dq-val{ color:var(--ink); }
 @media (max-width:720px){ .dq{ grid-template-columns:1fr; } }
 
+/* ---------- per-chart 'how to read' notes ---------- */
+.readwrap{ text-align:center; margin:2px auto 10px; }
+.readmore{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em;
+  color:var(--ink-d); background:none; border:none; cursor:pointer; padding:4px 6px; }
+.readmore:hover{ color:var(--amber); }
+.readnote{ max-width:660px; margin:0 auto; padding:0 24px; max-height:0; overflow:hidden; opacity:0;
+  text-align:left; color:var(--soft); font-size:13px; line-height:1.65;
+  transition:max-height .32s ease, opacity .32s ease, margin .32s ease; }
+.readnote.open{ max-height:340px; opacity:1; margin-top:8px; }
+
 /* ---------- interactive explorer ---------- */
 .explorer{ max-width:var(--tmax); margin:0 auto 16px; padding:0 24px; display:grid;
   grid-template-columns:1.3fr 1fr; gap:22px; align-items:center; }

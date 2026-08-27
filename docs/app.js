@@ -622,6 +622,44 @@
     el.classList.add("reveal"); revealNew(el.parentNode || el);
   }
 
+  /* ---------- per-chart 'how to read' explainers ---------- */
+  const CHART_NOTES = {
+    "chart-hod": "Each line is mean demand at that hour, averaged over every day in the window (amber = winter months, cyan = summer, pale = all year). The vertical gap between winter and summer at a fixed hour is roughly the weather-driven part of load; the shape itself (overnight trough, morning ramp, evening peak) is behavioural, not thermal.",
+    "chart-ww": "Weekday against weekend mean profiles. The gap is a purely behavioural signal driven by work patterns, with no temperature in it, which is exactly what the model must separate from the genuine weather response.",
+    "chart-heatmap": "Mean demand for every hour of the day (rows) by month of the year (columns); brighter cells are higher demand. Reading down a column shows a day's shape in that month; reading along a row shows how one hour shifts across the seasons.",
+    "chart-fft": "The demand series broken into cycles (a Fourier power spectrum). Spikes mark periods the grid repeats: 24h and 12h from the daily routine, 7 days from the working week, and one year from the season. Bar height is how much of the variance sits at that period.",
+    "chart-response": "Every dot is a single day, its mean temperature (x) against its mean demand (y). The line is a two-segment regression whose breakpoint is chosen by searching for the join that minimises squared error. The steep cold-side slope (MW per degree) beside the near-flat warm side is the heating/cooling asymmetry.",
+    "chart-regional": "Pearson correlation between each city's daily temperature and national daily demand. It is negative because colder days lift demand; a larger magnitude means national demand tracks that city more closely. GB weather is highly correlated region to region, so the bars sit close together and the ranking is the point.",
+    "chart-ts": "The held-out years: the real thermometer (cyan) against the temperature the model infers from demand alone (amber), having never seen temperature in training. The range buttons zoom to a period so you can inspect a specific event.",
+    "chart-scatter": "Predicted against actual temperature on the test years. Points on the dashed 1:1 line are exact; vertical spread around it is the error. A consistent tilt off the line would flag systematic bias rather than random error.",
+    "chart-compare": "Mean absolute error for each model on the same held-out years; shorter is better. The comparison that matters is the calendar baseline against the models that also see demand, which isolates how much the electricity signal adds.",
+    "chart-cv": "Walk-forward validation: the model is retrained for each year using only earlier years, then scored on that unseen year. Bars of similar height across years mean the result is stable rather than an artefact of one lucky split.",
+    "chart-interval": "The inferred line with a shaded 90% prediction interval calibrated on out-of-sample residuals. Roughly nine in ten observed points should fall inside the band; the coverage actually achieved on the holdout is stated in the text above.",
+    "chart-shap-global": "Mean absolute SHAP value per feature: the average number of degrees each input moves a prediction, over all test days. It ranks what the model leans on, which is not the same as what simply correlates with temperature.",
+    "chart-shap-example": "For one day, how each feature pushed the estimate away from the all-days average (the base value). Bars to the right argue warmer, to the left colder, and together they add up to that day's prediction.",
+    "chart-resmonth": "The spread of prediction errors grouped into a box per month. A box centred away from zero flags a month with systematic bias; a tall box flags months that are simply harder to reconstruct.",
+    "chart-forecast": "Recent demand (history) continuing into the forecast with a 90% band. The band comes from an expanding-window backtest rather than in-sample fit, so it reflects error the model would actually make ahead of time.",
+    "chart-warehouse": "The result of the SQL query above, run against the star schema: mean demand per season. It is shown to demonstrate the warehouse returns the same figures as the pandas pipeline.",
+  };
+  function addChartNotes() {
+    Object.keys(CHART_NOTES).forEach((id) => {
+      const plot = $(id); if (!plot) return;
+      const container = plot.closest(".panel") || plot.closest(".panel-screen") || plot.parentElement;
+      if (!container) return;
+      const cap = container.querySelector(".cap");
+      const anchor = cap || container;
+      if (anchor.nextElementSibling && anchor.nextElementSibling.classList.contains("readwrap")) return; // idempotent
+      const wrap = document.createElement("div"); wrap.className = "readwrap";
+      const btn = document.createElement("button"); btn.className = "readmore"; btn.type = "button";
+      btn.textContent = "How to read ▸";
+      const note = document.createElement("div"); note.className = "readnote"; note.textContent = CHART_NOTES[id];
+      btn.addEventListener("click", () => { const open = note.classList.toggle("open");
+        btn.textContent = open ? "How to read ▾" : "How to read ▸"; });
+      wrap.appendChild(btn); wrap.appendChild(note);
+      anchor.insertAdjacentElement("afterend", wrap);
+    });
+  }
+
   function init() {
     if (started) return; started = true;
     let t; try { t = localStorage.getItem("gw-theme"); } catch (e) {}
@@ -639,6 +677,7 @@
     buildNav();
     trendCard();
     dataStamp();
+    addChartNotes();
     dataQuality();
 
     if (!("IntersectionObserver" in window)) {
