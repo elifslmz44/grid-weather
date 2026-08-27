@@ -321,8 +321,48 @@
 </section>
 
 <!-- 12 -->
+<!-- 12 TRY IT YOURSELF (interactive predictor) -->
+<section class="section" id="s6d">
+  <div class="wrap"><p class="modtag mono">MODULE 12 // TRY IT YOURSELF</p>
+    <h2>Guess the weather from the grid</h2></div>
+  <p class="body">Give the grid a day and watch it infer the temperature. This is a deliberately
+    <em>simplified</em> explorer — just average demand, the month, and whether it's a weekend — so you
+    can feel the relationship directly, live in your browser. The full model uses far more signal and
+    is more accurate; the honest gap is noted below.</p>
+  <div class="explorer">
+    <div class="ex-controls">
+      <label class="ex-field mono">AVERAGE DEMAND
+        <input type="range" id="ex-demand">
+        <span class="ex-readout" id="ex-demand-val">—</span>
+      </label>
+      <label class="ex-field mono">MONTH
+        <select id="ex-month">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9">September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+      </label>
+      <div class="ex-field mono">DAY TYPE
+        <div class="seg" id="ex-weekend">
+          <button type="button" data-w="0" class="on">weekday</button>
+          <button type="button" data-w="1">weekend</button>
+        </div>
+      </div>
+    </div>
+    <div class="ex-output">
+      <div class="ex-temp" id="ex-temp">—</div>
+      <div class="ex-label mono" id="ex-label"></div>
+    </div>
+  </div>
+  <p class="body muted" id="ex-note"></p>
+</section>
+
+<!-- 13 -->
 <section class="section" id="s7">
-  <div class="wrap"><p class="modtag mono">MODULE 12 // CONCLUSION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 13 // CONCLUSION</p>
     <h2>What did we actually learn?</h2>
     <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature signal —
       as a supplement to the calendar, not a replacement for it.</p>

@@ -110,10 +110,9 @@ Separately from the reconstruction, the site includes an **honest short-horizon 
 ## What I'd do next
 
 - Swap ERA5 for **Met Office DataHub** station data and validate one against the other.
-- Add a **SQL/DuckDB transformation layer** and a small star-schema for the daily aggregates, to make the modelling inputs queryable.
-- A **live in-browser predictor** — feed a day's demand pattern, see the inferred temperature.
 - **Per-city weather sensitivity** — the 10-city fetch already supports a regional breakdown.
 - Significance/confidence around the "18%" improvement, and a gradient-boosting comparison.
+- Containerise the environment (Dockerfile) for one-command reproducibility.
 
 ## Reproduce it
 

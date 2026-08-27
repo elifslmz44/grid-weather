@@ -32,7 +32,7 @@ import numpy as np
 # the tree models), so we silence just these specific messages to keep the console readable.
 warnings.filterwarnings("ignore", message=".*encountered in matmul.*", category=RuntimeWarning)
 import pandas as pd
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestRegressor
@@ -163,6 +163,32 @@ def shap_explain(fitted, test, feats, target, dates):
     }
 
 
+def explorer_model(test_start_year):
+    """A deliberately tiny, interpretable model for the site's interactive 'try it yourself' widget:
+    daily temperature ~ average demand + month (as a cycle) + weekend. Linear, so its coefficients
+    run in the browser as a one-line dot product. It is NOT the headline model -- it's a simplified
+    explorer -- so its own honest holdout MAE is exported alongside for an apples-to-apples caveat."""
+    d = pd.read_csv(config.PROCESSED_DIR / "daily.csv", parse_dates=["date"]) \
+        .dropna(subset=["nd_mean", "temp_mean_c"])
+    month = d["date"].dt.month.to_numpy()
+    ang = 2 * np.pi * month / 12
+    weekend = (d["date"].dt.dayofweek >= 5).astype(float).to_numpy()
+    X = np.column_stack([d["nd_mean"].to_numpy(), np.sin(ang), np.cos(ang), weekend])
+    y = d["temp_mean_c"].to_numpy()
+    train = d["date"].dt.year.to_numpy() < test_start_year
+    lr = LinearRegression().fit(X[train], y[train])
+    mae = float(mean_absolute_error(y[~train], lr.predict(X[~train]))) if (~train).any() else 0.0
+    c = lr.coef_
+    return {
+        "coef": {"intercept": float(lr.intercept_), "nd_mean": float(c[0]),
+                 "sin_month": float(c[1]), "cos_month": float(c[2]), "weekend": float(c[3])},
+        "demand_min_mw": round(float(np.percentile(d["nd_mean"], 2)), 0),
+        "demand_max_mw": round(float(np.percentile(d["nd_mean"], 98)), 0),
+        "demand_med_mw": round(float(d["nd_mean"].median()), 0),
+        "mae_c": round(mae, 2),
+    }
+
+
 def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     df, FEATURES_A, FEATURES_B, TARGET = build_feature_table()
     train, test = chronological_split(df, test_start_year)
@@ -236,6 +262,9 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
         if fitted_models.get("rf_B") is not None else None
     if shap_payload is not None:
         (web / "shap.json").write_text(json.dumps(shap_payload, indent=2))
+
+    # --- tiny interactive explorer model (runs in the browser) ---
+    (web / "explorer.json").write_text(json.dumps(explorer_model(test_start_year), indent=2))
 
     payload = {
         "test_start_year": test_start_year,

@@ -164,6 +164,38 @@
     renderHeatmap();
   }
 
+  function renderExplorer() { const e = D.explorer;
+    const sec = $("s6d"); if (!e || !e.coef) { if (sec) sec.style.display = "none"; return; }
+    const dem = $("ex-demand"), demVal = $("ex-demand-val"), mon = $("ex-month"),
+          wkToggle = $("ex-weekend"), out = $("ex-temp"), lab = $("ex-label"), note = $("ex-note");
+    if (!dem || !out) return;
+    dem.min = e.demand_min_mw; dem.max = e.demand_max_mw; dem.step = 50; dem.value = e.demand_med_mw;
+    let weekend = 0;
+    const describe = (t) => t < 0 ? "a hard frost" : t < 5 ? "a cold day" : t < 10 ? "chilly"
+      : t < 15 ? "mild" : t < 20 ? "pleasantly warm" : "hot, for Britain";
+    const compute = () => {
+      const d = +dem.value, m = +mon.value, ang = 2 * Math.PI * m / 12, c = e.coef;
+      const t = c.intercept + d * c.nd_mean + Math.sin(ang) * c.sin_month
+              + Math.cos(ang) * c.cos_month + weekend * c.weekend;
+      demVal.textContent = d.toLocaleString() + " MW";
+      out.textContent = t.toFixed(1) + "°C";
+      lab.textContent = describe(t);
+    };
+    dem.addEventListener("input", compute);
+    mon.addEventListener("change", compute);
+    if (wkToggle) wkToggle.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+      weekend = +b.dataset.w;
+      wkToggle.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+      compute();
+    }));
+    const full = D.metrics && D.metrics.metrics && D.metrics.metrics.rf_B ? D.metrics.metrics.rf_B.mae : null;
+    if (note) note.innerHTML = `Simplified explorer — 3 inputs, a plain linear model running live in your
+      browser. On held-out years it lands within about <strong>±${fmt(e.mae_c, 1)} °C</strong>${full
+      ? `, versus the full model's ±${fmt(full, 2)} °C` : ""}. Fewer signals, less accuracy — but you can
+      feel the relationship: crank demand up in mid-winter and the inferred temperature drops.`;
+    compute();
+  }
+
   function renderWarehouse() { const p = P(), w = D.warehouse;
     if (!w) { const sec = $("s6c"); if (sec) sec.style.display = "none"; return; }
     // star-schema diagram from the exported table metadata
@@ -482,7 +514,7 @@
   }
 
   /* ---------- reveals, lazy render, theme ---------- */
-  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s6b: renderForecast, s6c: renderWarehouse, s7: conclusion };
+  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s6b: renderForecast, s6c: renderWarehouse, s6d: renderExplorer, s7: conclusion };
   const rendered = new Set();
   let revealObserver = null;
 
@@ -530,8 +562,8 @@
   }
   // right-edge module navigator: click to jump, highlights the section you're in
   function buildNav() {
-    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s6b", "s6c", "s7"];
-    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Forecast", "Data model", "Conclusion"];
+    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s6b", "s6c", "s6d", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Forecast", "Data model", "Try it", "Conclusion"];
     if (!ids.some((id) => $(id))) return;
     const nav = document.createElement("nav"); nav.id = "modnav";
     ids.forEach((id, i) => { const s = $(id); if (!s) return;
