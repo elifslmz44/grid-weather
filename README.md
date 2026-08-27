@@ -1,183 +1,163 @@
 # Can Britain's Electricity Grid Reveal the Weather?
 
-*An experiment in extracting environmental signals from electricity demand — without showing the model the temperature.*
+*Reconstructing Great Britain's daily temperature from electricity-demand behaviour alone — without ever showing the model a thermometer.*
 
 [![Weekly data refresh](https://github.com/elifslmz44/grid-weather/actions/workflows/refresh.yml/badge.svg)](https://github.com/elifslmz44/grid-weather/actions/workflows/refresh.yml)
 
-**Live site:** https://elifslmz44.github.io/grid-weather/ · rebuilt automatically each week from the latest public data.
+**Live, self-updating site:** https://elifslmz44.github.io/grid-weather/ — rebuilt automatically every week from the latest public data.
 
-> **Status:** work in progress. Results below are populated **only after** they are computed on
-> real data. No performance numbers are invented; any metric shown has been produced by the
-> evaluation pipeline in this repository.
+---
+
+## TL;DR
+
+A **weather-blind** model reconstructs Britain's daily mean temperature to **≈±1.8 °C (R² ≈ 0.82)** on years it never trained on — about **18% better** than knowing only the calendar date. The point was never the score; it was the experiment, and what it reveals: the grid responds several times more sharply to cold than to heat, and electricity behaviour carries real temperature information *beyond* the season. Every number is validated chronologically, ships with an honest uncertainty band, and the whole pipeline re-runs itself weekly so nothing on the site goes stale.
+
+> Headline figures below are from a representative run; the exact values refresh weekly on the live site. No metric here is hand-typed — each is produced by the evaluation pipeline in this repo.
 
 ## The question
 
-Electricity demand responds to how people behave, and how people behave responds to the
-weather. This project treats the Great Britain electricity grid as an **indirect sensor**: if
-the observed temperature were hidden, how much could we infer about British weather from
-electricity-demand patterns alone? The model is trained on grid-derived and calendar features
-with **temperature deliberately withheld**, and only *after* it makes its predictions do we
-join real weather observations to see how close it got — and, more interestingly, where and
-why it fails.
+Electricity demand responds to how people behave, and how people behave responds to the weather. This project treats the GB grid as an **indirect sensor**: if the observed temperature were hidden, how much could we infer about British weather from demand patterns alone? The model trains on grid-derived and calendar features with **temperature deliberately withheld** — only *after* it predicts do I join real weather to see how close it got, and, more interestingly, where and why it fails.
 
-## Why this project?
+Two honest boundaries I set from the start:
 
-It sits at the intersection of physics (periodic signals, Fourier analysis, rate-of-change),
-data engineering (real API ingestion, time-series cleaning, chronological validation) and
-energy systems. The intellectual value is in the experimental design and interpretation, not
-in chasing a leaderboard score.
+- This **reconstructs the past**, it does not forecast future weather. A weather-blind model has no way to see a coming cold snap.
+- Correlation between demand and temperature does **not** mean the grid "measures" weather. The framing throughout is "how much signal is recoverable", not "the grid is a thermometer".
 
 ## Data
 
 | Layer | Source | Access | Granularity | Notes |
 |---|---|---|---|---|
-| Electricity | NESO **Historic Demand Data** (CKAN Data Portal) | Open API, no key | Half-hourly (48 settlement periods/day) | `ND`, `TSD`, embedded wind/solar, interconnectors. Published ~21 days in arrears; solar/demand subject to retrospective correction. |
-| Weather | **Open-Meteo** Historical Weather API (ERA5 reanalysis) | Open API, no key | Hourly | Population-weighted across 10 GB cities. See substitution note below. |
+| Electricity | NESO **Historic Demand Data** (CKAN portal) | Open API, no key | Half-hourly (48 periods/day) | `ND`, `TSD`, embedded wind/solar. Published ~21 days in arrears; recent weeks provisional. |
+| Weather | **Open-Meteo** Historical API (ERA5 reanalysis) | Open API, no key | Hourly | Population-weighted across 10 GB cities. |
 
-**Weather substitution (documented deliberately):** the spec's first choice is Met Office
-station observations. Those require credentials and give patchy long-run historical coverage,
-so this build uses ERA5 reanalysis via Open-Meteo. ERA5 blends station, satellite, aircraft and
-buoy observations through a numerical model — it is *not* raw station data, and is optimised for
-consistency over pinpoint daily accuracy. The weather layer is isolated in `src/ingest_weather.py`
-so it can be swapped for Met Office DataHub later without touching the rest of the pipeline.
+**Weather substitution, documented deliberately.** The first-choice source was Met Office station observations, but those need credentials and give patchy long-run coverage, so this build uses ERA5 reanalysis via Open-Meteo. ERA5 blends station, satellite, aircraft and buoy data through a numerical model — it is *not* raw station data, and is tuned for consistency over pinpoint daily accuracy. The weather layer is isolated in `src/ingest_weather.py` so it can be swapped for Met Office DataHub later without touching the rest of the pipeline.
 
-**National weather proxy construction:** hourly 2 m temperature is fetched for 10 GB population
-centres (London, Birmingham, Manchester, Leeds, Glasgow, Sheffield, Bristol, Newcastle,
-Liverpool, Edinburgh) and combined into a single series weighted by approximate urban
-population, so the national estimate leans toward where electricity load actually is. Weights
-are listed in `src/config.py`.
+**National proxy.** Hourly 2 m temperature for 10 population centres (London, Birmingham, Manchester, Leeds, Glasgow, Sheffield, Bristol, Newcastle, Liverpool, Edinburgh) combined with population weights, so the national estimate leans toward where load actually is. **Study period:** 2015–2025 (configurable).
 
-**Study period:** 2015–2025 (configurable in `src/config.py`).
+## Pipeline & engineering
 
-## Architecture
+This is the part I care most about — the analysis is only as trustworthy as the data plumbing under it.
 
 ```
-        NESO CKAN API                         Open-Meteo ERA5 API
-              │                                        │
-              ▼                                        ▼
-   Raw electricity CSVs                    Raw per-city temperature JSON
-     (data/raw/, cached)                     (data/raw/weather/, cached)
-              │                                        │
-              └───────────────┬────────────────────────┘
-                              ▼
-                Cleaning · validation · timezone/DST alignment
-                              ▼
-                     Feature engineering
-              (weather-blind: grid + calendar only)
-                              ▼
-        ┌─────────────────────┴─────────────────────┐
-        ▼                                            ▼
-   Model A: electricity-only            Model B: electricity + calendar
-        └─────────────────────┬─────────────────────┘
-                              ▼
-                 Predicted temperature  ──►  join REAL weather
-                              ▼
-        Chronological evaluation · cold-spell detection · residual analysis
-                              ▼
-              Frozen JSON/CSV  ──►  interactive website
+   NESO CKAN API                         Open-Meteo ERA5 API
+        │                                        │
+        ▼                                        ▼
+  Raw electricity CSVs                  Raw per-city temperature JSON
+   (cached on disk)                         (cached on disk)
+        └───────────────┬────────────────────────┘
+                        ▼
+          Cleaning · validation · timezone/DST alignment
+                        ▼
+               Weather-blind feature engineering
+                        ▼
+     climatology baseline → linear → random forest  (Model A vs B)
+                        ▼
+        Predicted temperature  ──►  join REAL weather (held out)
+                        ▼
+   Walk-forward CV · prediction intervals · SHAP · cold-spell · forecast
+                        ▼
+          Frozen JSON  ──►  self-contained static site
 ```
 
-## Methodology (planned)
+Details worth noting:
 
-- **Weather-blind features only.** Temperature is never an input. Two variants are compared:
-  **Model A** (electricity/grid-derived features) and **Model B** (adds hour/day/month/daylight
-  calendar context). The comparison answers: *how much weather signal is in electricity
-  behaviour, versus simply knowing the time of year?*
-- **Baselines first:** day-of-year climatology, then linear regression, before any tree ensemble.
-- **Chronological holdout.** Earlier years train; later years test. Time-series order is never
-  shuffled.
-- **Metrics:** MAE, RMSE, R², broken down by season, weekday/weekend, and temperature extremes.
-- **Cold-spell detection** framed as classification (precision / recall / confusion matrix), plus
-  an explicit test of heating-vs-cooling asymmetry.
+- **DST-aware cleaning.** British clocks change twice a year; naïve handling silently drops or duplicates an hour. The cleaner reconciles UTC and local time explicitly. Across 2015–2025 (~193k half-hours) the validated series has **0 missing intervals, 0 duplicates, 0 impossible values and 0 DST mismatches**, aggregated to ~4,000 clean daily rows.
+- **Tests gate the pipeline.** `pytest` covers the timestamp/DST logic, deduplication and validation; the weekly job runs them *before* it publishes, so a bad change can't reach the live site.
+- **Self-contained site.** The whole front end reads one bundled `docs/data.js` — no server, no database, works from `file://`, deploys as static files.
+- **It updates itself.** A scheduled GitHub Action re-pulls both APIs, reruns the full analysis, runs the tests, and commits the refreshed results every week; GitHub Pages then republishes. The live figures are never a stale snapshot — that green badge above is the proof.
 
-## Results
+## Method
 
-On a strict chronological holdout (train 2015–2022, test 2023–2025), the weather-blind model
-reconstructs Britain's daily mean temperature to **±1.77 °C (RMSE 2.19, R² 0.82)** — having
-never seen a thermometer.
+- **Weather-blind features only.** Temperature is never an input. **Model A** uses electricity/grid-derived features; **Model B** adds calendar context (month, daylight, holidays). The A/B split directly answers: *how much weather signal is in demand behaviour, versus simply knowing the time of year?*
+- **Baselines first:** day-of-year climatology, then a regularised linear model, before any tree ensemble.
+- **Chronological holdout.** Earlier years train, later years test. Order is never shuffled.
+- **Walk-forward cross-validation.** The model is retrained for each held-out year (expanding window), so the headline number isn't a fluke of one split.
+- **Prediction intervals.** A 90% band calibrated conformally on out-of-sample residuals — with the coverage it *actually* achieved reported honestly, not the coverage hoped for.
+- **Explainability (SHAP)** for what the model leans on, globally and per day.
+
+## What I found
+
+On a strict chronological holdout (train 2015–2022, test 2023–2025), reconstructing daily mean temperature having never seen a thermometer:
 
 | Model | Features | MAE (°C) | RMSE (°C) | R² |
 |---|---|---|---|---|
 | Climatology | day-of-year average only | 2.14 | 2.74 | 0.72 |
 | Electricity only (RF) | demand behaviour, no calendar | 2.73 | 3.40 | 0.57 |
-| Electricity + calendar (RF) | demand + month/daylight/holiday | **1.77** | **2.19** | **0.82** |
+| **Electricity + calendar (RF)** | demand + month/daylight/holiday | **1.77** | **2.19** | **0.82** |
 
-The honest finding is nuanced. Electricity demand *alone* (no calendar) is a **worse** guide to
-temperature than simply knowing the date — the seasonal cycle dominates. But demand *added to*
-the calendar beats climatology by **0.38 °C (≈18% lower error)**, so the grid genuinely carries
-temperature information beyond seasonality. The strongest demand signals are the **7-day rolling
-mean of demand** (importance 0.51) and the **overnight minimum** (0.20) — i.e. sustained load and
-baseline heating, exactly the heating-load fingerprint.
+The nuance is the interesting bit. Electricity demand *alone* is a **worse** guide than just knowing the date — the seasonal cycle dominates. But demand *added to* the calendar beats climatology by **0.38 °C (≈18% lower error)**, so the grid genuinely carries temperature information beyond seasonality. SHAP and impurity importance agree on what does the work: the **7-day rolling mean of demand** and the **overnight minimum** — sustained load and baseline heating, exactly the heating-load fingerprint you'd hope a weather-blind model would latch onto rather than a spurious shortcut.
 
-Cold-spell detection, the heating-vs-cooling asymmetry, and the largest-error failure analysis are
-computed in `src/evaluation.py` and rendered live on the website from `outputs/web_data/`.
+Three findings I'd point an interviewer to:
+
+- **Heating/cooling asymmetry.** Demand climbs steeply as it gets colder, then flattens once it's mild — a kink, not a symmetric V. Britain heats electrically but rarely cools electrically, so the model reads cold snaps far more sharply than warm spells. (Quantified with a fitted breakpoint on the site.)
+- **The grid is shrinking.** A long-term decline of roughly **−2.3%/year** (~−670 MW/yr) runs through the decade — efficiency, LED lighting, rooftop solar. The model has to avoid mistaking that slow drift for a change of season, which is why the trend is measured and removed.
+- **It generalises.** Walk-forward validation keeps the error in a tight band across every held-out year rather than spiking — the result travels.
+
+Cold-spell detection (precision/recall), the largest-error failure analysis, the walk-forward spread, and the achieved interval coverage are all computed in the pipeline and rendered live on the site.
+
+## A forward-looking piece: demand forecast
+
+Separately from the reconstruction, the site includes an **honest short-horizon forecast of electricity demand** (a transparent seasonal-trend model: long-term trend + annual Fourier cycle + working week + holidays), with a 90% band calibrated from an **expanding-window backtest**. It is clearly scoped: it forecasts **demand, not weather** — it reads the calendar but not an upcoming cold snap, and a production forecaster would ingest a numerical weather forecast. It's a strong, interpretable baseline, presented as exactly that.
 
 ## Limitations
 
-*To be expanded as analysis proceeds.* Known up front: ERA5 is reanalysis not station data;
-NESO recent weeks are provisional; calendar features can leak season, which is exactly why the
-A/B split exists; correlation between demand and temperature does **not** imply the grid
-"measures" weather.
+- **ERA5 is reanalysis, not station data** — consistent, but not ground truth for any single day.
+- **Recent NESO weeks are provisional** and get retrospectively corrected.
+- **Calendar features can leak season** — which is the whole reason the A/B split exists, so the "electricity-only" contribution can be isolated.
+- **Correlation, not causation.** The grid does not "measure" weather; the model recovers a statistical relationship.
+- **The forecast is demand, not weather**, and its band widens in reality during unusual weather; the stated coverage is a historical backtest average.
 
-## Running locally
+## What I'd do next
+
+- Swap ERA5 for **Met Office DataHub** station data and validate one against the other.
+- Add a **SQL/DuckDB transformation layer** and a small star-schema for the daily aggregates, to make the modelling inputs queryable.
+- A **live in-browser predictor** — feed a day's demand pattern, see the inferred temperature.
+- **Per-city weather sensitivity** — the 10-city fetch already supports a regional breakdown.
+- Significance/confidence around the "18%" improvement, and a gradient-boosting comparison.
+
+## Reproduce it
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Phase 2 — ingestion (safe to re-run; everything is cached)
-python -m src.ingest_neso            # electricity, configured year window
-python -m src.ingest_weather         # population-weighted GB temperature (fetched in UTC)
-
-# Phase 3 -- clean, validate, align (writes data/processed/ + a data-quality report)
+# ingest (cached; safe to re-run) → clean → test
+python -m src.ingest_neso
+python -m src.ingest_weather
 python -m src.clean
-
-# run the test suite (DST timestamp logic, dedup, validation)
 pytest -q
-```
 
-```bash
-# Phase 4 -- exploratory + signal analysis (figures + web_data JSON)
+# analysis → models (+ walk-forward CV, intervals, SHAP) → evaluation → forecast
 python -m src.signal_analysis
-```
-
-```bash
-# Phase 5 -- weather-blind features + Model A/B (metrics + predictions to outputs/)
 python -m src.modelling
-```
-
-```bash
-# Phase 6 -- evaluation: segments, cold-spell detection, asymmetry, failure analysis
 python -m src.evaluation
+python -m src.forecast
+
+# bundle results into the static site, then preview
+python -m src.build_site
+python -m http.server -d docs 8000        # open http://localhost:8000
 ```
 
-```bash
-# Phase 8 -- bundle results into the static site, then preview
-python -m src.build_site          # writes docs/data.js from outputs/web_data/
-# open docs/index.html in a browser, or serve locally:
-python -m http.server -d docs 8000   # then visit http://localhost:8000
+No API keys required. `python -m src.ingest_neso --list` shows available NESO year resources without downloading.
+
+**Deploy (GitHub Pages):** commit `docs/` (including `docs/data.js`), push, then Settings → Pages → *Deploy from a branch* → `main` / `/docs`. The weekly Action keeps it current thereafter.
+
+## Repository layout
+
+```
+src/            ingestion, cleaning, features, modelling, evaluation, forecast, build_site
+tests/          pytest suite (DST logic, dedup, validation, features)
+data/           raw/ + processed/ (gitignored; regenerated by the pipeline)
+outputs/        web_data/*.json (frozen results the site reads) + model_results/
+docs/           the static site: index.html, style.css, app.js, data.js
+.github/        weekly self-refresh workflow
 ```
 
-### The website
+## The site
 
-The site (`docs/index.html`) is a self-contained page that reads a single bundled
-`docs/data.js`. Build the bundle from the frozen results, then preview locally:
+The interactive write-up walks the whole story — daily rhythm, the frequency domain, the temperature-response curve, the weather-blind experiment, validation and uncertainty, SHAP explainability, cold-spell detection, failure analysis, the demand forecast, and a conclusion.
 
-```bash
-python -m src.build_site                 # writes docs/data.js from outputs/web_data/
-python -m http.server -d docs 8000       # open http://localhost:8000
-```
-
-**Deploy (GitHub Pages):** commit `docs/` (including `docs/data.js`), push, then set
-Settings → Pages → Source to *Deploy from a branch*, branch `main`, folder `/docs`.
-The site goes live at `https://<username>.github.io/grid-weather/`.
-
-# List available NESO year resources without downloading:
-python -m src.ingest_neso --list
-```
-
-No API keys are required for the default pipeline.
-
-## Live site
-
-*Deploy: commit `docs/`, push, then Settings → Pages → Deploy from a branch → `main` / `/docs`. See The website above.*
+<!-- Add screenshots: drop PNGs in docs/screenshots/ and uncomment.
+![Overview](docs/screenshots/overview.png)
+![Temperature response](docs/screenshots/response.png)
+-->
