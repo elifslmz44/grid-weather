@@ -309,15 +309,17 @@
       row.querySelectorAll(".v").forEach((el) => countUp(el, +el.dataset.t, +el.dataset.d, el.dataset.p, ""));
       revealNew(row);
     }
-    // CV bars: model vs climatology per year
+    // CV bars: model vs climatology per year (static so the y-axis fits the real values)
     if (c && c.folds && c.folds.length) {
       const yrs = c.folds.map((f) => f.year);
-      plotBars("chart-cv", [
+      const vmax = Math.max.apply(null, c.folds.map((f) => Math.max(f.mae, f.climatology_mae)));
+      plot("chart-cv", [
         { type: "bar", x: yrs, y: c.folds.map((f) => f.mae), name: "grid model", marker: { color: p.amber },
           hovertemplate: "%{x}: ±%{y:.2f} °C<extra>grid</extra>" },
         { type: "bar", x: yrs, y: c.folds.map((f) => f.climatology_mae), name: "calendar", marker: { color: p.line },
           hovertemplate: "%{x}: ±%{y:.2f} °C<extra>calendar</extra>" },
-      ], { barmode: "group", xaxis: AX({ dtick: 1 }), yaxis: AX({ title: "mean abs error (°C)", rangemode: "tozero" }),
+      ], { barmode: "group", xaxis: AX({ dtick: 1 }),
+           yaxis: AX({ title: "mean abs error (°C)", range: [0, vmax * 1.15] }),
            margin: { l: 60, r: 16, t: 10, b: 40 } });
     } else hide($("chart-cv"));
     // verdict
