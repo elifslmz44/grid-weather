@@ -238,6 +238,32 @@ footer .foot-title{ font-family:"VT323",monospace; font-size:1.6rem; color:var(-
 footer .muted{ color:var(--ink-d); max-width:46em; }
 footer a{ color:var(--cyan); }
 
+/* ---------- data integrity panel ---------- */
+.dq{ max-width:var(--tmax); margin:20px auto 0; padding:0 24px;
+  display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; }
+.dq .dq-item{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-d);
+  display:flex; gap:10px; align-items:baseline; border-top:1px solid var(--line); padding:7px 0; }
+.dq .dq-ok{ color:var(--cyan); } .dq .dq-warn{ color:var(--amber); }
+.dq .dq-val{ color:var(--ink); }
+@media (max-width:720px){ .dq{ grid-template-columns:1fr; } }
+
+/* ---------- SQL warehouse module ---------- */
+.schema{ max-width:var(--tmax); margin:0 auto 22px; padding:0 24px; display:flex; flex-wrap:wrap;
+  gap:16px; align-items:flex-start; justify-content:center; }
+.schema .tbl{ border:1px solid var(--line); border-radius:6px; background:var(--screen); min-width:190px;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; overflow:hidden; }
+.schema .tbl.fact{ border-color:var(--amber-d); }
+.schema .tbl h5{ margin:0; padding:7px 12px; font-size:11px; letter-spacing:.08em; color:var(--bg);
+  background:var(--ink-d); }
+.schema .tbl.fact h5{ background:var(--amber); }
+.schema .tbl ul{ margin:0; padding:8px 12px; list-style:none; color:var(--ink-d); }
+.schema .tbl li{ padding:1px 0; }
+.schema .tbl li.key{ color:var(--temp); }
+.schema .join{ align-self:center; color:var(--ink-d); font-family:"IBM Plex Mono",monospace; font-size:20px; }
+.sql-caption{ font-size:11px; color:var(--soft); line-height:1.6; margin:0 0 10px;
+  padding:8px 12px; border-left:2px solid var(--amber-d); background:var(--screen); border-radius:0 4px 4px 0; }
+#recon-line{ color:var(--temp); }
+
 /* ---------- segmented feature toggle ---------- */
 .seg{ max-width:var(--tmax); margin:0 auto 20px; padding:0 24px; display:flex; flex-wrap:wrap; gap:8px; }
 .seg button{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em;

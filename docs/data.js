@@ -27763,6 +27763,223 @@ window.GRID_DATA = {
       24376.0
     ]
   },
+  "warehouse": {
+    "reconciliation": {
+      "pandas_rows": 4018,
+      "sql_rows": 4019,
+      "matched_rows": 4018,
+      "max_abs_diff_mw": 643.520833,
+      "reconciled": false
+    },
+    "tables": [
+      {
+        "name": "dim_date",
+        "grain": "one row per calendar day",
+        "columns": [
+          "date_key",
+          "year",
+          "month",
+          "dow",
+          "day_of_year",
+          "is_weekend",
+          "season"
+        ]
+      },
+      {
+        "name": "fact_demand_daily",
+        "grain": "one row per day",
+        "columns": [
+          "date_key",
+          "nd_mean",
+          "nd_max",
+          "nd_min",
+          "nd_range",
+          "nd_total_mwh",
+          "n_periods"
+        ]
+      },
+      {
+        "name": "fact_weather_daily",
+        "grain": "one row per day",
+        "columns": [
+          "date_key",
+          "temp_mean_c",
+          "temp_min_c",
+          "temp_max_c"
+        ]
+      }
+    ],
+    "sample_query": "SELECT season, ROUND(AVG(nd_mean),0) AS mean_demand_mw, COUNT(*) AS days\nFROM v_daily GROUP BY season ORDER BY mean_demand_mw DESC;",
+    "mart_season": [
+      {
+        "season": "winter",
+        "mean_demand_mw": 33131.0,
+        "days": 994
+      },
+      {
+        "season": "autumn",
+        "mean_demand_mw": 28691.0,
+        "days": 1001
+      },
+      {
+        "season": "spring",
+        "mean_demand_mw": 27813.0,
+        "days": 1012
+      },
+      {
+        "season": "summer",
+        "mean_demand_mw": 24697.0,
+        "days": 1012
+      }
+    ],
+    "mart_weekday": [
+      {
+        "day_type": "weekday",
+        "mean_demand_mw": 29542.0
+      },
+      {
+        "day_type": "weekend",
+        "mean_demand_mw": 26113.0
+      }
+    ],
+    "mart_temp_response": [
+      {
+        "temp_c": -2,
+        "mean_demand_mw": 36186.0,
+        "days": 13
+      },
+      {
+        "temp_c": -1,
+        "mean_demand_mw": 36937.0,
+        "days": 15
+      },
+      {
+        "temp_c": 0,
+        "mean_demand_mw": 36964.0,
+        "days": 38
+      },
+      {
+        "temp_c": 1,
+        "mean_demand_mw": 35811.0,
+        "days": 70
+      },
+      {
+        "temp_c": 2,
+        "mean_demand_mw": 35180.0,
+        "days": 92
+      },
+      {
+        "temp_c": 3,
+        "mean_demand_mw": 34704.0,
+        "days": 106
+      },
+      {
+        "temp_c": 4,
+        "mean_demand_mw": 33561.0,
+        "days": 161
+      },
+      {
+        "temp_c": 5,
+        "mean_demand_mw": 32884.0,
+        "days": 224
+      },
+      {
+        "temp_c": 6,
+        "mean_demand_mw": 32179.0,
+        "days": 234
+      },
+      {
+        "temp_c": 7,
+        "mean_demand_mw": 30819.0,
+        "days": 223
+      },
+      {
+        "temp_c": 8,
+        "mean_demand_mw": 30095.0,
+        "days": 261
+      },
+      {
+        "temp_c": 9,
+        "mean_demand_mw": 29420.0,
+        "days": 281
+      },
+      {
+        "temp_c": 10,
+        "mean_demand_mw": 28606.0,
+        "days": 260
+      },
+      {
+        "temp_c": 11,
+        "mean_demand_mw": 27929.0,
+        "days": 259
+      },
+      {
+        "temp_c": 12,
+        "mean_demand_mw": 26703.0,
+        "days": 221
+      },
+      {
+        "temp_c": 13,
+        "mean_demand_mw": 26000.0,
+        "days": 225
+      },
+      {
+        "temp_c": 14,
+        "mean_demand_mw": 25208.0,
+        "days": 221
+      },
+      {
+        "temp_c": 15,
+        "mean_demand_mw": 25229.0,
+        "days": 255
+      },
+      {
+        "temp_c": 16,
+        "mean_demand_mw": 24740.0,
+        "days": 268
+      },
+      {
+        "temp_c": 17,
+        "mean_demand_mw": 24403.0,
+        "days": 208
+      },
+      {
+        "temp_c": 18,
+        "mean_demand_mw": 24483.0,
+        "days": 157
+      },
+      {
+        "temp_c": 19,
+        "mean_demand_mw": 24283.0,
+        "days": 90
+      },
+      {
+        "temp_c": 20,
+        "mean_demand_mw": 25119.0,
+        "days": 50
+      },
+      {
+        "temp_c": 21,
+        "mean_demand_mw": 24786.0,
+        "days": 40
+      },
+      {
+        "temp_c": 22,
+        "mean_demand_mw": 24880.0,
+        "days": 22
+      },
+      {
+        "temp_c": 23,
+        "mean_demand_mw": 25631.0,
+        "days": 11
+      },
+      {
+        "temp_c": 24,
+        "mean_demand_mw": 24960.0,
+        "days": 7
+      }
+    ]
+  },
   "weekday_weekend": {
     "hour": [
       0.0,
@@ -27919,6 +28136,6 @@ window.GRID_DATA = {
     "max_gap_hour": 7.5
   },
   "_meta": {
-    "generated_utc": "2026-08-26"
+    "generated_utc": "2026-08-27"
   }
 };

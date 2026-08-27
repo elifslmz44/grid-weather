@@ -9,6 +9,7 @@ scipy>=1.11
 scikit-learn>=1.3
 holidays>=0.40
 shap>=0.44
+duckdb>=0.10
 
 # Visualisation (exploratory / notebook use)
 matplotlib>=3.7

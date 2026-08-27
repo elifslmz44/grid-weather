@@ -32,6 +32,7 @@ Run from the project root:
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -278,6 +279,28 @@ def write_quality_report(demand, weather, daily, gaps, dst_mismatch) -> Path:
     return report
 
 
+def write_quality_json(demand, weather, daily, gaps, dst_mismatch) -> dict:
+    """Compact machine-readable version of the quality report, for the site's integrity panel."""
+    a = demand.attrs
+    payload = {
+        "demand_rows": int(len(demand)),
+        "coverage": [str(demand["timestamp_utc"].min().date()), str(demand["timestamp_utc"].max().date())],
+        "dupes_dropped": int(a.get("n_dupes", 0)),
+        "bad_ts_dropped": int(a.get("dropped_bad_ts", 0)),
+        "impossible_dropped": int(a.get("n_impossible", 0)),
+        "missing_gaps": int(len(gaps)),
+        "dst_mismatches": int(len(dst_mismatch)),
+        "weather_rows": int(len(weather)),
+        "weather_missing": int(weather["gb_temp_pop_weighted"].isna().sum()),
+        "daily_rows": int(len(daily)),
+        "temp_span_c": [round(float(daily["temp_mean_c"].min()), 1), round(float(daily["temp_mean_c"].max()), 1)],
+    }
+    web = config.OUTPUTS_DIR / "web_data"
+    web.mkdir(parents=True, exist_ok=True)
+    (web / "data_quality.json").write_text(json.dumps(payload, indent=2))
+    return payload
+
+
 def main() -> None:
     demand = clean_demand()
     gaps = detect_missing_halfhours(demand)
@@ -285,6 +308,7 @@ def main() -> None:
     weather = clean_weather()
     daily = build_daily(demand, weather)
     write_quality_report(demand, weather, daily, gaps, dst_mismatch)
+    write_quality_json(demand, weather, daily, gaps, dst_mismatch)
 
     print("\n=== Phase 3 summary ===")
     print(f"Demand half-hourly rows : {len(demand):,}")

@@ -165,6 +165,10 @@
   </div>
   <p class="body">Comparing them answers a sharp question: <em>how much weather signal lives in
     electricity behaviour itself, versus simply knowing what time of year it is?</em></p>
+  <p class="body">None of this works without trustworthy data. The pipeline validates every load —
+    reconstructing British Summer Time's 46- and 50-period days, flagging gaps, and dropping
+    duplicates and impossible readings — and reports what it did:</p>
+  <div class="dq" id="dq-panel"></div>
 </section>
 
 <!-- 04 -->
@@ -298,9 +302,27 @@
   </div>
 </section>
 
-<!-- 11 -->
+<!-- 11 DATA MODEL (SQL warehouse) -->
+<section class="section" id="s6c">
+  <div class="wrap"><p class="modtag mono">MODULE 11 // DATA MODEL</p>
+    <h2>Under the hood: a SQL warehouse</h2></div>
+  <p class="body">The daily figures don't have to live in pandas. The same transformations are also
+    expressed as a small <strong>star schema</strong> in SQL (DuckDB) — one conformed date dimension,
+    two daily fact tables — built straight off the tidy CSVs. It's the difference between a script and
+    a queryable model.</p>
+  <div id="schema-diagram" class="schema"></div>
+  <p class="body">A transformation layer is only trustworthy if it agrees with the source of truth,
+    so it's <strong>reconciled</strong>: the SQL daily aggregation is checked against the pandas one,
+    day for day. <span id="recon-line"></span></p>
+  <div class="panel"><div class="panel-screen">
+    <p class="sql-caption mono">SELECT season, ROUND(AVG(nd_mean),0) AS mean_demand_mw, COUNT(*) AS days<br>FROM v_daily GROUP BY season ORDER BY mean_demand_mw DESC;</p>
+    <div id="chart-warehouse" class="plot"></div></div>
+    <p class="cap">A live query against the star schema: mean demand by season.</p></div>
+</section>
+
+<!-- 12 -->
 <section class="section" id="s7">
-  <div class="wrap"><p class="modtag mono">MODULE 11 // CONCLUSION</p>
+  <div class="wrap"><p class="modtag mono">MODULE 12 // CONCLUSION</p>
     <h2>What did we actually learn?</h2>
     <p class="body" id="conclusion">Britain's electricity demand does carry a real temperature signal —
       as a supplement to the calendar, not a replacement for it.</p>

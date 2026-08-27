@@ -164,6 +164,37 @@
     renderHeatmap();
   }
 
+  function renderWarehouse() { const p = P(), w = D.warehouse;
+    if (!w) { const sec = $("s6c"); if (sec) sec.style.display = "none"; return; }
+    // star-schema diagram from the exported table metadata
+    const dia = $("schema-diagram");
+    if (dia && w.tables) {
+      const tbl = (t, i) => { const isFact = t.name.startsWith("fact");
+        const items = t.columns.map((c) => `<li class="${c === "date_key" ? "key" : ""}">${c}</li>`).join("");
+        return `<div class="tbl ${isFact ? "fact" : ""}"><h5>${t.name}</h5><ul>${items}</ul></div>`; };
+      // order: fact - dim - fact, joined on date_key
+      const dim = w.tables.find((t) => t.name === "dim_date");
+      const facts = w.tables.filter((t) => t.name.startsWith("fact"));
+      const parts = [];
+      if (facts[0]) parts.push(tbl(facts[0]));
+      if (dim) { parts.push('<div class="join">▸</div>', tbl(dim)); }
+      if (facts[1]) { parts.push('<div class="join">◂</div>', tbl(facts[1])); }
+      dia.innerHTML = parts.join("");
+    }
+    const rl = $("recon-line"), r = w.reconciliation;
+    if (rl && r) rl.textContent = r.reconciled
+      ? `✓ reconciled on ${r.matched_rows.toLocaleString()} days (max difference ${r.max_abs_diff_mw} MW).`
+      : `mismatch detected — see the warehouse log.`;
+    // seasonal query result as a bar chart
+    const s = w.mart_season || [];
+    if (s.length) {
+      plot("chart-warehouse", [{ type: "bar", x: s.map((r2) => r2.season), y: s.map((r2) => r2.mean_demand_mw),
+        marker: { color: p.amber }, hovertemplate: "%{x}: %{y:,.0f} MW<extra></extra>" }],
+        { xaxis: AX({}), yaxis: AX({ title: "mean demand (MW)", rangemode: "tozero" }),
+          margin: { l: 62, r: 16, t: 10, b: 40 } });
+    } else hide($("chart-warehouse"));
+  }
+
   function renderForecast() { const p = P(), f = D.forecast;
     if (!f || !f.forecast) { const sec = $("s6b"); if (sec) sec.style.display = "none"; return; }
     const b = f.backtest || {};
@@ -451,7 +482,7 @@
   }
 
   /* ---------- reveals, lazy render, theme ---------- */
-  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s6b: renderForecast, s7: conclusion };
+  const SECTION_RENDER = { s1: heartbeat, s2: fourier, s2b: responseCurve, s3: features, s4: prediction, s4b: validation, s4c: renderShap, s5: coldSpell, s6: gridLies, s6b: renderForecast, s6c: renderWarehouse, s7: conclusion };
   const rendered = new Set();
   let revealObserver = null;
 
@@ -499,8 +530,8 @@
   }
   // right-edge module navigator: click to jump, highlights the section you're in
   function buildNav() {
-    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s6b", "s7"];
-    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Forecast", "Conclusion"];
+    const ids = ["s1", "s2", "s2b", "s3", "s4", "s4b", "s4c", "s5", "s6", "s6b", "s6c", "s7"];
+    const labels = ["Heartbeat", "Frequencies", "Response", "Experiment", "Inference", "Validation", "Explainability", "Cold snap", "Failures", "Forecast", "Data model", "Conclusion"];
     if (!ids.some((id) => $(id))) return;
     const nav = document.createElement("nav"); nav.id = "modnav";
     ids.forEach((id, i) => { const s = $(id); if (!s) return;
@@ -530,6 +561,21 @@
     el.textContent = meta.generated_utc; line.style.display = "";
   }
 
+  function dataQuality() { const q = D.data_quality, el = $("dq-panel"); if (!q || !el) return;
+    const ok = (b) => b ? '<span class="dq-ok">✓</span>' : '<span class="dq-warn">!</span>';
+    const rows = [
+      [true, `${(q.demand_rows || 0).toLocaleString()} half-hourly readings ingested`],
+      [q.missing_gaps === 0, `${q.missing_gaps} missing-interval gaps`],
+      [q.dst_mismatches === 0, `DST days auto-reconstructed (${q.dst_mismatches} anomalies)`],
+      [q.dupes_dropped === 0 && q.impossible_dropped === 0,
+        `${q.dupes_dropped} duplicates · ${q.impossible_dropped} impossible values`],
+      [true, `${(q.weather_rows || 0).toLocaleString()} weather rows · ${q.weather_missing} missing`],
+      [true, `${(q.daily_rows || 0).toLocaleString()} daily rows · ${q.temp_span_c ? q.temp_span_c[0] + " to " + q.temp_span_c[1] + "°C" : ""}`],
+    ];
+    el.innerHTML = rows.map(([good, txt]) => `<div class="dq-item">${ok(good)} <span class="dq-val">${txt}</span></div>`).join("");
+    el.classList.add("reveal"); revealNew(el.parentNode || el);
+  }
+
   function init() {
     if (started) return; started = true;
     let t; try { t = localStorage.getItem("gw-theme"); } catch (e) {}
@@ -547,6 +593,7 @@
     buildNav();
     trendCard();
     dataStamp();
+    dataQuality();
 
     if (!("IntersectionObserver" in window)) {
       document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in-view"));
