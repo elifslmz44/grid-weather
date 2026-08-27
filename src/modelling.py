@@ -35,7 +35,7 @@ import pandas as pd
 from sklearn.linear_model import Ridge, LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from . import config
@@ -164,10 +164,9 @@ def shap_explain(fitted, test, feats, target, dates):
 
 
 def explorer_model(test_start_year):
-    """A deliberately tiny, interpretable model for the site's interactive 'try it yourself' widget:
-    daily temperature ~ average demand + month (as a cycle) + weekend. Linear, so its coefficients
-    run in the browser as a one-line dot product. It is NOT the headline model -- it's a simplified
-    explorer -- so its own honest holdout MAE is exported alongside for an apples-to-apples caveat."""
+    """Small linear model for the site's interactive widget: temperature ~ average demand +
+    month (as a cycle) + weekend. Linear coefficients run in the browser as a dot product. Not the
+    headline model; its holdout MAE is exported too so the widget can state the accuracy gap."""
     d = pd.read_csv(config.PROCESSED_DIR / "daily.csv", parse_dates=["date"]) \
         .dropna(subset=["nd_mean", "temp_mean_c"])
     month = d["date"].dt.month.to_numpy()
@@ -215,6 +214,8 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
                                        n_jobs=-1, random_state=42), FEATURES_A),
         ("rf_B", RandomForestRegressor(n_estimators=300, min_samples_leaf=3,
                                        n_jobs=-1, random_state=42), FEATURES_B),
+        ("gbm_B", HistGradientBoostingRegressor(max_iter=400, learning_rate=0.05,
+                                                max_depth=None, random_state=42), FEATURES_B),
     ]
     fitted_models = {}
     for name, model, feats in specs:
@@ -230,7 +231,7 @@ def run(test_start_year: int = DEFAULT_TEST_START_YEAR) -> dict:
     folds, resid = walk_forward_cv(df, FEATURES_B, TARGET, test_start_year)
     maes = [f["mae"] for f in folds]
     # calibrate a 90% interval half-width on out-of-fold residuals from *pre-holdout* years,
-    # then measure the coverage actually achieved on the untouched holdout (honest check).
+    # then measure the coverage actually achieved on the untouched holdout.
     pre = [resid[y] for y in resid if y < test_start_year]
     calib = np.concatenate(pre) if pre else (np.concatenate(list(resid.values())) if resid else np.array([0.0]))
     target_cov = 0.90

@@ -180,6 +180,10 @@
     reconstructing British Summer Time's 46- and 50-period days, flagging gaps, and dropping
     duplicates and impossible readings — and reports what it did:</p>
   <div class="dq" id="dq-panel"></div>
+  <p class="body">The national temperature is a population-weighted blend of ten cities. Some track
+    national demand more tightly than others — a mix of regional climate and where the load sits:</p>
+  <div class="panel"><div class="panel-screen"><div id="chart-regional" class="plot"></div></div>
+    <p class="cap">Correlation of each city's daily temperature with national demand (more negative = tracks demand more tightly).</p></div>
 </section>
 
 <!-- 04 -->
@@ -294,9 +298,8 @@
     <h2>Where is demand heading?</h2></div>
   <p class="body">Everything so far looked <em>backwards</em> — reconstructing the past. This looks
     forward: a transparent seasonal-trend model (long-term trend + annual cycle + working week +
-    holidays) forecasts national <strong>demand</strong> for the next two months. It's deliberately
-    interpretable, and the error band comes from an honest walk-forward backtest — how the model
-    actually did on days it hadn't seen, not in-sample optimism.</p>
+    holidays) forecasts national <strong>demand</strong> for the next two months. The error band comes from a walk-forward backtest: how the model did on days it hadn't seen,
+    rather than in-sample residuals.</p>
   <div class="stat-row" id="forecast-stats"></div>
   <div class="panel"><div class="panel-screen">
     <div class="chlegend"><span style="color:var(--ink-d)">▮ history</span> <span style="color:var(--amber)">▮ forecast</span> <span style="color:var(--ink-d)">▮ 90% band</span></div>
@@ -304,7 +307,7 @@
     <p class="cap">Recent demand and the 60-day forecast with its backtested 90% interval.</p></div>
   <p class="body" id="forecast-verdict"></p>
   <div class="limits">
-    <h3 class="cyan">HONEST SCOPE</h3>
+    <h3 class="cyan">SCOPE &amp; LIMITS</h3>
     <ul>
       <li>This forecasts <strong>demand, not weather</strong>. It reads the calendar — season, weekday, holidays, trend — but not an upcoming cold snap.</li>
       <li>A production forecaster would feed in a numerical weather forecast; this is a strong, interpretable baseline, not that.</li>
@@ -339,7 +342,7 @@
   <p class="body">Give the grid a day and watch it infer the temperature. This is a deliberately
     <em>simplified</em> explorer — just average demand, the month, and whether it's a weekend — so you
     can feel the relationship directly, live in your browser. The full model uses far more signal and
-    is more accurate; the honest gap is noted below.</p>
+    is more accurate; the gap is noted below.</p>
   <div class="explorer">
     <div class="ex-controls">
       <label class="ex-field mono">AVERAGE DEMAND

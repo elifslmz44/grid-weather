@@ -48,6 +48,7 @@ jobs:
           python -m src.evaluation
           python -m src.forecast
           python -m src.warehouse
+          python -m src.regional
           python -m src.build_site
 
       - name: Commit refreshed results

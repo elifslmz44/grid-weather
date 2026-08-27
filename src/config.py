@@ -76,7 +76,7 @@ OPENMETEO_ARCHIVE_BASE = "https://archive-api.open-meteo.com/v1/archive"
 WEATHER_REQUEST_TIMEZONE = "UTC"
 
 # Great Britain population centres (England + Scotland + Wales; NESO is a GB operator, so
-# Northern Ireland is deliberately excluded). Weights are approximate built-up-area / urban
+# Northern Ireland is excluded). Weights are approximate built-up-area / urban
 # populations used purely to weight the national temperature estimate toward where people
 # (and therefore electricity load) actually are. They are normalised at runtime, so exact
 # values matter less than their relative sizes. Documented in the README.

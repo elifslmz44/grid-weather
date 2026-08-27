@@ -257,8 +257,7 @@
     if (v) v.innerHTML =
       `Across an ${b.origins}-fold walk-forward backtest the model forecasts daily demand to within
        <strong>±${(b.mae_mw || 0).toLocaleString()} MW</strong> on average (about ${fmt(b.mape_pct, 1)}%),
-       and its 90% band held <strong>${fmt((b.coverage || 0) * 100, 0)}%</strong> of the time. Good enough
-       to see the shape of the coming weeks — the weekly rhythm and the seasonal drift — with the honest
+       and its 90% band held <strong>${fmt((b.coverage || 0) * 100, 0)}%</strong> of the time. Enough to show the shape of the coming weeks, the weekly rhythm and the seasonal drift, with the
        caveat below.`;
   }
 
@@ -326,7 +325,7 @@
        <strong>±${fmt(c.mae_mean, 2)} °C</strong> (spread just ±${fmt(c.mae_std, 2)} °C) — steady, not a
        one-off. The calibrated 90% band is <strong>±${fmt(c.interval_half_width_c, 2)} °C</strong>, and on
        the holdout it actually contained <strong>${fmt(c.holdout_coverage * 100, 0)}%</strong> of days
-       (target 90% — reported as measured, not as hoped).`;
+       (target 90%, measured on the holdout).`;
     // interval band around inferred temperature
     if (pr && pr.date && pr.rf_B_lower && pr.rf_B_upper) {
       plot("chart-interval", [
@@ -397,6 +396,17 @@
     const fill = (id, arr) => { const ul = $(id); if (ul && arr) ul.innerHTML = arr.map((f) => `<li>▸ ${f}</li>`).join(""); };
     fill("feats-a", m.features_A);
     if (m.features_A && m.features_B) fill("feats-b", m.features_B.filter((f) => !m.features_A.includes(f)));
+    renderRegional();
+  }
+
+  function renderRegional() { const p = P(), r = D.regional;
+    if (!r || !r.cities || !r.cities.length) { hide($("chart-regional")); return; }
+    const c = r.cities.slice().sort((a, b) => a.corr - b.corr); // most negative at top
+    plot("chart-regional", [{ type: "bar", orientation: "h",
+      x: c.map((x) => x.corr), y: c.map((x) => x.city),
+      marker: { color: p.temp }, hovertemplate: "%{y}<br>corr %{x:.2f}<extra></extra>" }],
+      { xaxis: AX({ title: "corr(city temperature, national demand)" }),
+        yaxis: AX({ automargin: true }), margin: { l: 96, r: 16, t: 10, b: 44 } });
   }
 
   /* ---------- 04 ---------- */
@@ -411,7 +421,7 @@
           you get from the date, because the seasonal cycle dominates` : ""}.`,
         rf_B: (b) => `Electricity behaviour <em>plus</em> the calendar reaches <strong>±${fmt(b.mae, 2)} °C</strong>${clim ?
           ` — about <strong>${(((clim.mae - b.mae) / clim.mae) * 100).toFixed(0)}% less error</strong> than the date alone` : ""}.
-          So the grid carries real temperature information beyond the season.`,
+          So demand carries temperature information beyond the season.`,
       };
       const showModel = (key) => { const b = m.metrics[key]; if (!b || !row) return;
         row.innerHTML = [["±", b.mae, 2, "°C", "mean error"], ["", b.rmse, 2, "°C", "RMSE"],
@@ -454,7 +464,7 @@
       ], { xaxis: AX({ title: "observed (°C)" }), yaxis: AX({ title: "inferred (°C)" }) });
     } else { hide($("chart-ts")); hide($("chart-scatter")); }
     if (m && m.metrics) {
-      const order = [["climatology", "climatology"], ["rf_A", "electricity only"], ["rf_B", "elec + calendar"]];
+      const order = [["climatology", "climatology"], ["rf_A", "electricity only"], ["rf_B", "random forest"], ["gbm_B", "gradient boosting"]];
       const rows = order.filter(([k]) => m.metrics[k]);
       const maxMae = Math.max.apply(null, rows.map(([k]) => m.metrics[k].mae));
       plotBars("chart-compare", [{ type: "bar", orientation: "h", y: rows.map(([, l]) => l),

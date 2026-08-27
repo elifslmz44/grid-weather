@@ -7,9 +7,8 @@ The main pipeline builds its daily table in pandas. This module rebuilds the sam
     dim_date  ──<  fact_demand_daily
               ──<  fact_weather_daily
 
-It exists to (a) show the transformations as declarative SQL rather than imperative pandas, and
-(b) **reconcile**: it proves the SQL daily aggregation reproduces the pandas one to floating-point
-tolerance. A transformation layer you can't reconcile against a source of truth isn't worth much.
+It expresses the transformations as SQL rather than pandas, and reconciles: the SQL daily
+aggregation is checked against the pandas daily.csv to floating-point tolerance.
 
 Run from the project root:
     python -m src.warehouse

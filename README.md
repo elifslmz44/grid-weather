@@ -12,15 +12,15 @@
 
 ## TL;DR
 
-A **weather-blind** model reconstructs Britain's daily mean temperature to **≈±1.8 °C (R² ≈ 0.82)** on years it never trained on — about **18% better** than knowing only the calendar date. The point was never the score; it was the experiment, and what it reveals: the grid responds several times more sharply to cold than to heat, and electricity behaviour carries real temperature information *beyond* the season. Every number is validated chronologically, ships with an honest uncertainty band, and the whole pipeline re-runs itself weekly so nothing on the site goes stale.
+A **weather-blind** model reconstructs Britain's daily mean temperature to **≈±1.8 °C (R² ≈ 0.82)** on years it never trained on — about **18% better** than knowing only the calendar date. More interesting than the score is what it implies: the grid responds several times more sharply to cold than to heat, and electricity behaviour carries temperature information beyond the season. Everything is validated chronologically, carries an uncertainty band, and the pipeline re-runs weekly so the figures stay current.
 
-> Headline figures below are from a representative run; the exact values refresh weekly on the live site. No metric here is hand-typed — each is produced by the evaluation pipeline in this repo.
+> Headline figures below are from a representative run; the exact values refresh weekly on the live site. No metric here is hand-typed: each is produced by the evaluation pipeline in this repo.
 
 ## The question
 
 Electricity demand responds to how people behave, and how people behave responds to the weather. This project treats the GB grid as an **indirect sensor**: if the observed temperature were hidden, how much could we infer about British weather from demand patterns alone? The model trains on grid-derived and calendar features with **temperature deliberately withheld** — only *after* it predicts do I join real weather to see how close it got, and, more interestingly, where and why it fails.
 
-Two honest boundaries I set from the start:
+Two boundaries I set from the start:
 
 - This **reconstructs the past**, it does not forecast future weather. A weather-blind model has no way to see a coming cold snap.
 - Correlation between demand and temperature does **not** mean the grid "measures" weather. The framing throughout is "how much signal is recoverable", not "the grid is a thermometer".
@@ -71,7 +71,7 @@ Details worth noting:
 ## Method
 
 - **Weather-blind features only.** Temperature is never an input. **Model A** uses electricity/grid-derived features; **Model B** adds calendar context (month, daylight, holidays). The A/B split directly answers: *how much weather signal is in demand behaviour, versus simply knowing the time of year?*
-- **Baselines first:** day-of-year climatology, then a regularised linear model, before any tree ensemble.
+- **Baselines first:** day-of-year climatology, then a regularised linear model, then tree ensembles (random forest and gradient boosting).
 - **Chronological holdout.** Earlier years train, later years test. Order is never shuffled.
 - **Walk-forward cross-validation.** The model is retrained for each held-out year (expanding window), so the headline number isn't a fluke of one split.
 - **Prediction intervals.** A 90% band calibrated conformally on out-of-sample residuals — with the coverage it *actually* achieved reported honestly, not the coverage hoped for.
@@ -87,19 +87,19 @@ On a strict chronological holdout (train 2015–2022, test 2023–2025), reconst
 | Electricity only (RF) | demand behaviour, no calendar | 2.73 | 3.40 | 0.57 |
 | **Electricity + calendar (RF)** | demand + month/daylight/holiday | **1.77** | **2.19** | **0.82** |
 
-The nuance is the interesting bit. Electricity demand *alone* is a **worse** guide than just knowing the date — the seasonal cycle dominates. But demand *added to* the calendar beats climatology by **0.38 °C (≈18% lower error)**, so the grid genuinely carries temperature information beyond seasonality. SHAP and impurity importance agree on what does the work: the **7-day rolling mean of demand** and the **overnight minimum** — sustained load and baseline heating, exactly the heating-load fingerprint you'd hope a weather-blind model would latch onto rather than a spurious shortcut.
+The result is not clean-cut. Electricity demand *alone* is a **worse** guide than just knowing the date — the seasonal cycle dominates. But demand *added to* the calendar beats climatology by **0.38 °C (≈18% lower error)**, so the grid genuinely carries temperature information beyond seasonality. SHAP and impurity importance agree on what does the work: the **7-day rolling mean of demand** and the **overnight minimum** — sustained load and baseline heating, the heating-load fingerprint rather than a spurious shortcut.
 
-Three findings I'd point an interviewer to:
+Three findings worth calling out:
 
 - **Heating/cooling asymmetry.** Demand climbs steeply as it gets colder, then flattens once it's mild — a kink, not a symmetric V. Britain heats electrically but rarely cools electrically, so the model reads cold snaps far more sharply than warm spells. (Quantified with a fitted breakpoint on the site.)
 - **The grid is shrinking.** A long-term decline of roughly **−2.3%/year** (~−670 MW/yr) runs through the decade — efficiency, LED lighting, rooftop solar. The model has to avoid mistaking that slow drift for a change of season, which is why the trend is measured and removed.
-- **It generalises.** Walk-forward validation keeps the error in a tight band across every held-out year rather than spiking — the result travels.
+- **It generalises.** Walk-forward validation keeps the error in a tight band across every held-out year rather than spiking.
 
 Cold-spell detection (precision/recall), the largest-error failure analysis, the walk-forward spread, and the achieved interval coverage are all computed in the pipeline and rendered live on the site.
 
 ## A forward-looking piece: demand forecast
 
-Separately from the reconstruction, the site includes an **honest short-horizon forecast of electricity demand** (a transparent seasonal-trend model: long-term trend + annual Fourier cycle + working week + holidays), with a 90% band calibrated from an **expanding-window backtest**. It is clearly scoped: it forecasts **demand, not weather** — it reads the calendar but not an upcoming cold snap, and a production forecaster would ingest a numerical weather forecast. It's a strong, interpretable baseline, presented as exactly that.
+Separately from the reconstruction, the site includes an **honest short-horizon forecast of electricity demand** (a transparent seasonal-trend model: long-term trend + annual Fourier cycle + working week + holidays), with a 90% band calibrated from an **expanding-window backtest**. It forecasts demand, not weather: it reads the calendar but not an upcoming cold snap, and a production forecaster would use a numerical weather forecast for that. It's meant as an interpretable baseline.
 
 ## Limitations
 
@@ -111,7 +111,7 @@ Separately from the reconstruction, the site includes an **honest short-horizon 
 
 ## What I'd do next
 
-- Swap ERA5 for **Met Office DataHub** station data and validate one against the other.
+- Validate ERA5 against **Met Office DataHub** station data — the comparison is written and key-gated in `src/validate_era5.py`, pending a DataHub key.
 - **Per-city weather sensitivity** — the 10-city fetch already supports a regional breakdown.
 - Significance/confidence around the "18%" improvement, and a gradient-boosting comparison.
 - Containerise the environment (Dockerfile) for one-command reproducibility.
@@ -134,6 +134,7 @@ python -m src.modelling
 python -m src.evaluation
 python -m src.forecast
 python -m src.warehouse          # build + reconcile the SQL star schema
+python -m src.regional           # per-city weather sensitivity
 
 # bundle results into the static site, then preview
 python -m src.build_site
@@ -153,7 +154,7 @@ docker run --rm -v "$PWD/docs:/app/docs" grid-weather   # rebuilt docs/data.js l
 
 ## A SQL warehouse (DuckDB)
 
-The daily figures are also modelled as a small **star schema in SQL**, built with DuckDB straight off the tidy CSVs — a conformed `dim_date` and two daily fact tables (`fact_demand_daily`, `fact_weather_daily`), with analytical marts on top (`mart_season`, `mart_weekday`, `mart_temp_response`). The SQL lives in `sql/`; `src/warehouse.py` runs it and, crucially, **reconciles** the SQL daily aggregation against the pandas `daily.csv` day-for-day (`tests/test_warehouse.py` asserts they match). It's the difference between a script and a queryable model — and a transformation layer you can't reconcile against a source of truth isn't worth much. Run it with `python -m src.warehouse`.
+The daily figures are also modelled as a small **star schema in SQL**, built with DuckDB straight off the tidy CSVs — a conformed `dim_date` and two daily fact tables (`fact_demand_daily`, `fact_weather_daily`), with analytical marts on top (`mart_season`, `mart_weekday`, `mart_temp_response`). The SQL lives in `sql/`; `src/warehouse.py` runs it and, crucially, **reconciles** the SQL daily aggregation against the pandas `daily.csv` day-for-day (`tests/test_warehouse.py` asserts they match). This keeps the daily aggregates queryable rather than locked inside a script, and the reconciliation check guards against the SQL and pandas paths silently drifting apart. Run it with `python -m src.warehouse`.
 
 ## Repository layout
 

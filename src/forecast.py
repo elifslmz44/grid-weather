@@ -1,18 +1,13 @@
 """
-Phase 10 -- honest short-horizon forecast of GB electricity DEMAND (not weather).
+Short-horizon forecast of GB electricity demand (not weather).
 
-This is deliberately a transparent seasonal-trend model, not a black box:
+Seasonal-trend model fitted with ridge regression on daily mean National Demand:
 
-    demand ~ long-term trend  +  annual seasonality (Fourier terms)
-             +  day-of-week   +  UK public holidays
+    demand ~ trend + annual Fourier terms + day-of-week + UK holidays
 
-fitted with a ridge regression on daily mean National Demand. It extrapolates the calendar
-structure forward, so it captures the season, the working week and the slow multi-year decline --
-but NOT the effect of upcoming weather (a production forecaster would ingest a weather forecast).
-That limitation is stated on the site; the point here is a well-backtested, interpretable baseline.
-
-Error bands come from an expanding-window backtest (train up to an origin, forecast forward, measure
-the real out-of-sample error), so they reflect how the model actually performs, not in-sample hope.
+It projects the calendar structure forward, so it picks up seasonality, the working week and the
+multi-year decline, but not upcoming weather (a real forecaster would use a weather forecast for
+that). Bands are from an expanding-window backtest rather than in-sample residuals.
 
 Run from the project root:
     python -m src.forecast
