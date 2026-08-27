@@ -6,6 +6,8 @@
 
 **Live, self-updating site:** https://elifslmz44.github.io/grid-weather/ — rebuilt automatically every week from the latest public data.
 
+![Can Britain's electricity grid reveal the weather?](docs/og-image.png)
+
 ---
 
 ## TL;DR
@@ -141,6 +143,13 @@ python -m http.server -d docs 8000        # open http://localhost:8000
 No API keys required. `python -m src.ingest_neso --list` shows available NESO year resources without downloading.
 
 **Deploy (GitHub Pages):** commit `docs/` (including `docs/data.js`), push, then Settings → Pages → *Deploy from a branch* → `main` / `/docs`. The weekly Action keeps it current thereafter.
+
+**Run it in Docker** (one command, no local Python setup):
+
+```bash
+docker build -t grid-weather .
+docker run --rm -v "$PWD/docs:/app/docs" grid-weather   # rebuilt docs/data.js lands back on the host
+```
 
 ## A SQL warehouse (DuckDB)
 

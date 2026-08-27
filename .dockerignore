@@ -1,0 +1,10 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+data/raw/
+data/processed/
+outputs/figures/
+outputs/model_results/*.pkl
+*.duckdb
+node_modules/
