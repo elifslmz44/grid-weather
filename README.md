@@ -169,9 +169,16 @@ docs/           the static site: index.html, style.css, app.js, data.js
 
 ## The site
 
-The interactive write-up walks the whole story — daily rhythm, the frequency domain, the temperature-response curve, the weather-blind experiment, validation and uncertainty, SHAP explainability, cold-spell detection, failure analysis, the demand forecast, and a conclusion.
+The interactive write-up walks the whole story — daily rhythm, the frequency domain, the temperature-response curve, the weather-blind experiment, validation and uncertainty, SHAP explainability, cold-spell detection, failure analysis, the demand forecast, a SQL data model, a live "try it yourself" predictor, and a conclusion.
 
-<!-- Add screenshots: drop PNGs in docs/screenshots/ and uncomment.
-![Overview](docs/screenshots/overview.png)
-![Temperature response](docs/screenshots/response.png)
--->
+![Hero — reading the weather off electricity demand](docs/screenshots/01-hero.png)
+
+*The two-channel scope: demand (CH1) and the temperature it's never shown (CH2).*
+
+![Britain's electrical heartbeat](docs/screenshots/02-heartbeat.png)
+
+*Mean National Demand by time of day — the daily pulse, split by season.*
+
+![The temperature response curve](docs/screenshots/03-temperature-response.png)
+
+*Daily demand vs temperature, with a fitted heating/cooling breakpoint that quantifies the asymmetry — Britain heats electrically but rarely cools.*
