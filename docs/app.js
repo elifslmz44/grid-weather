@@ -42,10 +42,12 @@
   function plotBars(id, traces, layout) { const el = $(id); if (!el) return;
     try {
       if (reduce || instant) { Plotly.newPlot(el, traces, layoutBase(layout), CFG); return; }
-      const realX = traces.map((t) => Array.isArray(t.x) ? t.x.slice() : null);
-      traces.forEach((t, i) => { if (realX[i]) t.x = realX[i].map(() => 0); });
+      // grow bars from the baseline along the VALUE axis: x for horizontal bars, y for vertical.
+      const horiz = traces.map((t) => t.orientation === "h");
+      const real = traces.map((t, i) => { const v = horiz[i] ? t.x : t.y; return Array.isArray(v) ? v.slice() : null; });
+      traces.forEach((t, i) => { if (real[i]) { if (horiz[i]) t.x = real[i].map(() => 0); else t.y = real[i].map(() => 0); } });
       Plotly.newPlot(el, traces, layoutBase(layout), CFG).then(() => requestAnimationFrame(() =>
-        Plotly.animate(el, { data: traces.map((t, i) => realX[i] ? { x: realX[i] } : {}) },
+        Plotly.animate(el, { data: traces.map((t, i) => real[i] ? (horiz[i] ? { x: real[i] } : { y: real[i] }) : {}) },
           { transition: { duration: 900, easing: "cubic-out" }, frame: { duration: 900 } })));
     } catch (e) { console.error(id, e); try { Plotly.newPlot(el, traces, layoutBase(layout), CFG); } catch (_) {} } }
 
