@@ -2,75 +2,75 @@
   "folds": [
     {
       "year": 2018,
-      "mae": 1.846,
-      "rmse": 2.327,
-      "r2": 0.836,
+      "mae": 1.859,
+      "rmse": 2.333,
+      "r2": 0.835,
       "n": 365,
-      "climatology_mae": 2.324
+      "climatology_mae": 2.317
     },
     {
       "year": 2019,
-      "mae": 1.76,
-      "rmse": 2.172,
-      "r2": 0.814,
+      "mae": 1.774,
+      "rmse": 2.185,
+      "r2": 0.812,
       "n": 365,
-      "climatology_mae": 2.12
+      "climatology_mae": 2.116
     },
     {
       "year": 2020,
-      "mae": 1.924,
-      "rmse": 2.413,
-      "r2": 0.748,
+      "mae": 1.933,
+      "rmse": 2.424,
+      "r2": 0.746,
       "n": 366,
-      "climatology_mae": 2.163
+      "climatology_mae": 2.167
     },
     {
       "year": 2021,
-      "mae": 1.992,
-      "rmse": 2.48,
-      "r2": 0.791,
+      "mae": 1.985,
+      "rmse": 2.477,
+      "r2": 0.792,
       "n": 365,
-      "climatology_mae": 2.214
+      "climatology_mae": 2.207
     },
     {
       "year": 2022,
-      "mae": 1.766,
-      "rmse": 2.262,
-      "r2": 0.83,
+      "mae": 1.767,
+      "rmse": 2.26,
+      "r2": 0.831,
       "n": 365,
-      "climatology_mae": 2.133
+      "climatology_mae": 2.134
     },
     {
       "year": 2023,
-      "mae": 1.845,
-      "rmse": 2.273,
-      "r2": 0.812,
+      "mae": 1.857,
+      "rmse": 2.289,
+      "r2": 0.809,
       "n": 365,
       "climatology_mae": 2.1
     },
     {
       "year": 2024,
-      "mae": 1.649,
-      "rmse": 2.08,
-      "r2": 0.799,
+      "mae": 1.652,
+      "rmse": 2.094,
+      "r2": 0.797,
       "n": 366,
-      "climatology_mae": 2.044
+      "climatology_mae": 2.041
     },
     {
       "year": 2025,
-      "mae": 1.739,
-      "rmse": 2.223,
+      "mae": 1.74,
+      "rmse": 2.227,
       "r2": 0.845,
       "n": 365,
-      "climatology_mae": 2.257
+      "climatology_mae": 2.251
     }
   ],
-  "mae_mean": 1.815,
+  "mae_mean": 1.821,
   "mae_std": 0.102,
-  "mae_min": 1.649,
-  "mae_max": 1.992,
+  "mae_min": 1.652,
+  "mae_max": 1.985,
   "n_folds": 8,
   "target_coverage": 0.9,
   "interval_half_width_c": 3.83,
-  "holdout_coverage": 0.924
+  "holdout_coverage": 0.922
 }

@@ -3,87 +3,87 @@
   "global": [
     {
       "feature": "nd_mean_roll7",
-      "mean_abs_shap": 1.9678
+      "mean_abs_shap": 2.0704
     },
     {
       "feature": "doy_cos",
-      "mean_abs_shap": 1.3147
+      "mean_abs_shap": 1.2781
     },
     {
       "feature": "doy_sin",
-      "mean_abs_shap": 0.9792
+      "mean_abs_shap": 0.9815
     },
     {
       "feature": "overnight_min_mw",
-      "mean_abs_shap": 0.8249
+      "mean_abs_shap": 0.665
     },
     {
       "feature": "nd_range_roll7",
-      "mean_abs_shap": 0.567
+      "mean_abs_shap": 0.5662
     },
     {
       "feature": "month_sin",
-      "mean_abs_shap": 0.3965
+      "mean_abs_shap": 0.4068
     },
     {
       "feature": "daylight_hours",
-      "mean_abs_shap": 0.3679
+      "mean_abs_shap": 0.4062
     },
     {
       "feature": "nd_min",
-      "mean_abs_shap": 0.319
+      "mean_abs_shap": 0.372
     },
     {
       "feature": "morning_ramp_max_mw",
-      "mean_abs_shap": 0.1628
+      "mean_abs_shap": 0.1648
     },
     {
       "feature": "nd_mean_lag7",
-      "mean_abs_shap": 0.1614
+      "mean_abs_shap": 0.157
     },
     {
       "feature": "nd_max",
-      "mean_abs_shap": 0.0983
+      "mean_abs_shap": 0.1063
     },
     {
       "feature": "evening_peak_mw",
-      "mean_abs_shap": 0.076
+      "mean_abs_shap": 0.0794
     },
     {
       "feature": "nd_mean_lag1",
-      "mean_abs_shap": 0.0643
+      "mean_abs_shap": 0.063
     },
     {
       "feature": "nd_std",
-      "mean_abs_shap": 0.0502
+      "mean_abs_shap": 0.0499
     },
     {
       "feature": "nd_range",
-      "mean_abs_shap": 0.0391
+      "mean_abs_shap": 0.0416
     },
     {
       "feature": "tsd_mean",
-      "mean_abs_shap": 0.0378
+      "mean_abs_shap": 0.0395
     },
     {
       "feature": "nd_mean",
-      "mean_abs_shap": 0.0339
+      "mean_abs_shap": 0.0367
     },
     {
       "feature": "dow",
-      "mean_abs_shap": 0.0148
+      "mean_abs_shap": 0.0157
     },
     {
       "feature": "month_cos",
-      "mean_abs_shap": 0.0082
+      "mean_abs_shap": 0.0122
     },
     {
       "feature": "is_holiday",
-      "mean_abs_shap": 0.0043
+      "mean_abs_shap": 0.0038
     },
     {
       "feature": "is_weekend",
-      "mean_abs_shap": 0.0019
+      "mean_abs_shap": 0.0012
     }
   ],
   "examples": [
@@ -94,76 +94,76 @@
       "predicted": -0.4,
       "contributions": [
         {
-          "feature": "overnight_min_mw",
-          "shap": -3.166
+          "feature": "nd_mean_roll7",
+          "shap": -3.114
         },
         {
-          "feature": "nd_mean_roll7",
-          "shap": -2.984
+          "feature": "overnight_min_mw",
+          "shap": -2.747
         },
         {
           "feature": "doy_cos",
-          "shap": -1.397
+          "shap": -1.403
         },
         {
           "feature": "nd_min",
-          "shap": -1.206
+          "shap": -1.4
         },
         {
           "feature": "nd_range_roll7",
-          "shap": -1.101
+          "shap": -1.107
         },
         {
           "feature": "daylight_hours",
-          "shap": -0.448
+          "shap": -0.479
         },
         {
           "feature": "doy_sin",
-          "shap": -0.301
+          "shap": -0.31
         },
         {
           "feature": "month_sin",
-          "shap": -0.276
+          "shap": -0.286
         }
       ]
     },
     {
       "label": "typical",
-      "date": "2023-05-04",
+      "date": "2025-10-16",
       "actual": 11.1,
-      "predicted": 11.6,
+      "predicted": 11.2,
       "contributions": [
         {
-          "feature": "doy_sin",
-          "shap": -1.929
+          "feature": "doy_cos",
+          "shap": -1.953
         },
         {
           "feature": "nd_mean_roll7",
-          "shap": 1.539
+          "shap": 1.836
+        },
+        {
+          "feature": "doy_sin",
+          "shap": 0.876
+        },
+        {
+          "feature": "daylight_hours",
+          "shap": -0.721
         },
         {
           "feature": "overnight_min_mw",
-          "shap": 1.04
+          "shap": 0.475
         },
         {
           "feature": "month_sin",
-          "shap": -0.898
-        },
-        {
-          "feature": "nd_min",
-          "shap": 0.42
-        },
-        {
-          "feature": "nd_max",
-          "shap": 0.248
+          "shap": 0.472
         },
         {
           "feature": "nd_range_roll7",
-          "shap": 0.24
+          "shap": -0.304
         },
         {
           "feature": "nd_mean_lag7",
-          "shap": 0.227
+          "shap": -0.243
         }
       ]
     },
@@ -175,35 +175,35 @@
       "contributions": [
         {
           "feature": "nd_mean_roll7",
-          "shap": 3.089
+          "shap": 3.233
         },
         {
           "feature": "doy_cos",
-          "shap": 2.021
+          "shap": 1.97
         },
         {
           "feature": "nd_range_roll7",
-          "shap": 1.434
-        },
-        {
-          "feature": "overnight_min_mw",
-          "shap": 1.279
+          "shap": 1.43
         },
         {
           "feature": "doy_sin",
-          "shap": 1.095
+          "shap": 1.094
+        },
+        {
+          "feature": "overnight_min_mw",
+          "shap": 1.019
         },
         {
           "feature": "daylight_hours",
-          "shap": 0.409
+          "shap": 0.458
         },
         {
           "feature": "nd_min",
-          "shap": 0.349
+          "shap": 0.425
         },
         {
           "feature": "nd_max",
-          "shap": 0.101
+          "shap": 0.117
         }
       ]
     }

@@ -1,0 +1,19 @@
+{
+  "demand_rows": 192864,
+  "coverage": [
+    "2015-01-01",
+    "2025-12-31"
+  ],
+  "dupes_dropped": 0,
+  "bad_ts_dropped": 0,
+  "impossible_dropped": 0,
+  "missing_gaps": 0,
+  "dst_mismatches": 0,
+  "weather_rows": 96432,
+  "weather_missing": 0,
+  "daily_rows": 4018,
+  "temp_span_c": [
+    -3.6,
+    27.5
+  ]
+}
