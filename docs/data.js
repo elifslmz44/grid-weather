@@ -29338,6 +29338,6 @@ window.GRID_DATA = {
     "max_gap_hour": 7.5
   },
   "_meta": {
-    "generated_utc": "2026-08-31"
+    "generated_utc": "2026-09-07"
   }
 };
