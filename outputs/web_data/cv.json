@@ -2,31 +2,31 @@
   "folds": [
     {
       "year": 2018,
-      "mae": 1.859,
-      "rmse": 2.333,
+      "mae": 1.861,
+      "rmse": 2.335,
       "r2": 0.835,
       "n": 365,
       "climatology_mae": 2.317
     },
     {
       "year": 2019,
-      "mae": 1.774,
-      "rmse": 2.185,
+      "mae": 1.773,
+      "rmse": 2.186,
       "r2": 0.812,
       "n": 365,
       "climatology_mae": 2.116
     },
     {
       "year": 2020,
-      "mae": 1.933,
-      "rmse": 2.424,
+      "mae": 1.934,
+      "rmse": 2.422,
       "r2": 0.746,
       "n": 366,
       "climatology_mae": 2.167
     },
     {
       "year": 2021,
-      "mae": 1.985,
+      "mae": 1.983,
       "rmse": 2.477,
       "r2": 0.792,
       "n": 365,
@@ -34,8 +34,8 @@
     },
     {
       "year": 2022,
-      "mae": 1.767,
-      "rmse": 2.26,
+      "mae": 1.768,
+      "rmse": 2.259,
       "r2": 0.831,
       "n": 365,
       "climatology_mae": 2.134
@@ -50,15 +50,15 @@
     },
     {
       "year": 2024,
-      "mae": 1.652,
-      "rmse": 2.094,
+      "mae": 1.651,
+      "rmse": 2.093,
       "r2": 0.797,
       "n": 366,
       "climatology_mae": 2.041
     },
     {
       "year": 2025,
-      "mae": 1.74,
+      "mae": 1.738,
       "rmse": 2.227,
       "r2": 0.845,
       "n": 365,
@@ -67,10 +67,10 @@
   ],
   "mae_mean": 1.821,
   "mae_std": 0.102,
-  "mae_min": 1.652,
-  "mae_max": 1.985,
+  "mae_min": 1.651,
+  "mae_max": 1.983,
   "n_folds": 8,
   "target_coverage": 0.9,
-  "interval_half_width_c": 3.83,
+  "interval_half_width_c": 3.84,
   "holdout_coverage": 0.922
 }
